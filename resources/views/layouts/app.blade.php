@@ -16,30 +16,27 @@
 
         <!-- Styles -->
         @livewireStyles
+
+        <!-- Librerías -->
+        <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+        
     </head>
-    <body class="font-sans antialiased">
-        <x-banner />
+    <body class="font-sans antialiased bg-gray-50 text-gray-900">
+        
+        <div class="flex h-screen overflow-hidden">
+            @include('components.sidebar')
 
-        <div class="min-h-screen bg-gray-100">
-            @livewire('navigation-menu')
+            <div class="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+                
+                <x-header :title="$title ?? 'Panel de Control'" />
 
-            <!-- Page Heading -->
-            @if (isset($header))
-                <header class="bg-white shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                        {{ $header }}
-                    </div>
-                </header>
-            @endif
-
-            <!-- Page Content -->
-            <main>
-                {{ $slot }}
-            </main>
+                <main class="p-6">
+                    {{ $slot }}
+                </main>
+            </div>
         </div>
 
         @stack('modals')
-
         @livewireScripts
     </body>
 </html>
