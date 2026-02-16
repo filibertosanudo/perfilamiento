@@ -13,15 +13,32 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
+
+            $table->foreignId('role_id')
+                ->constrained('roles')
+                ->cascadeOnUpdate()
+                ->restrictOnDelete();
+
+            $table->string('first_name', 100);
+            $table->string('last_name', 100);
+            $table->string('second_last_name', 100)->nullable();
+
+            $table->string('email', 150)->unique();
+            $table->string('password', 255);
+
+            $table->date('birth_date')->nullable();
+            $table->string('phone', 20)->nullable();
+
+            $table->timestamp('registered_at')->useCurrent();
+            $table->boolean('active')->default(true);
+
             $table->rememberToken();
+            
+            $table->timestamp('email_verified_at')->nullable(); 
             $table->foreignId('current_team_id')->nullable();
             $table->string('profile_photo_path', 2048)->nullable();
-            $table->timestamps();
-        });
+            $table->index('registered_at', 'idx_users_registered_at');
+        });   
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
