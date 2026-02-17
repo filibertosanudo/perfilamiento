@@ -12,31 +12,48 @@ class Group extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'institution_id',
+        'creator_id',
         'name',
         'description',
-        'creator_id',
-        'created_at',
         'active',
     ];
 
     protected $casts = [
         'created_at' => 'date',
-        'active' => 'boolean',
+        'active'     => 'boolean',
     ];
 
+    /**
+     * Institución a la que pertenece este grupo (obligatorio)
+     */
+    public function institution(): BelongsTo
+    {
+        return $this->belongsTo(Institution::class);
+    }
+
+    /**
+     * Orientador que administra este grupo
+     */
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'creator_id');
     }
 
-    public function users()
+    /**
+     * Usuarios que pertenecen a este grupo
+     */
+    public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class)->withPivot('joined_at');
+        return $this->belongsToMany(User::class, 'group_user')
+                    ->withPivot('joined_at');
     }
 
-    public function testAssignments()
+    /**
+     * Asignaciones de tests hechas a este grupo
+     */
+    public function testAssignments(): HasMany
     {
         return $this->hasMany(TestAssignment::class);
     }
-
 }

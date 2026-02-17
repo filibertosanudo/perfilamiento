@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('test_assignments', function (Blueprint $table) {
@@ -16,37 +13,41 @@ return new class extends Migration
 
             $table->foreignId('test_id')
                 ->constrained('tests')
-                ->cascadeOnUpdate()
-                ->cascadeOnDelete();
+                ->restrictOnDelete();
 
+            // Solo puede asignar a usuarios de sus grupos
+            $table->foreignId('assigned_by')
+                ->constrained('users')
+                ->restrictOnDelete();
+
+            // Exactamente UNO de estos tres tendrá valor según el tipo de asignación
             $table->foreignId('user_id')
                 ->nullable()
                 ->constrained('users')
-                ->cascadeOnUpdate()
-                ->restrictOnDelete();
+                ->cascadeOnDelete();
 
             $table->foreignId('group_id')
                 ->nullable()
                 ->constrained('groups')
-                ->cascadeOnUpdate()
                 ->cascadeOnDelete();
 
-            $table->foreignId('assigned_by')
-                ->constrained('users')
-                ->cascadeOnUpdate()
-                ->restrictOnDelete();
+            $table->foreignId('institution_id')
+                ->nullable()
+                ->constrained('institutions')
+                ->cascadeOnDelete();
 
             $table->timestamp('assigned_at')->useCurrent();
             $table->date('due_date')->nullable();
             $table->boolean('active')->default(true);
+            $table->timestamps();
 
-            $table->index(['user_id', 'group_id']);
+            $table->index(['test_id', 'user_id'],        'idx_ta_test_user');
+            $table->index(['test_id', 'group_id'],       'idx_ta_test_group');
+            $table->index(['test_id', 'institution_id'], 'idx_ta_test_inst');
+            $table->index('assigned_by',                 'idx_ta_assigned_by');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('test_assignments');

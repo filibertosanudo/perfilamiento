@@ -23,7 +23,7 @@ class RoleSeeder extends Seeder
                 'description' => 'Advisor who reviews and recommends based on test results',
             ],
             [
-                'name' => 'Normal User',
+                'name' => 'User',
                 'description' => 'Standard user who answers assigned tests',
             ],
         ]);
