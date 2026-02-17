@@ -26,11 +26,11 @@
 
             if ($role == 1) { // Admin
                 $menuItems = [
-                    ['id' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'dashboard'],
-                    ['id' => 'usuarios', 'label' => 'Gestión de Usuarios', 'icon' => 'users'],
-                    ['id' => 'orientadores', 'label' => 'Orientadores', 'icon' => 'user-cog'],
-                    ['id' => 'reportes', 'label' => 'Reportes Generales', 'icon' => 'chart'],
-                    ['id' => 'configuracion', 'label' => 'Configuración', 'icon' => 'settings'],
+                    ['id' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'dashboard', 'route' => 'dashboard'],
+                    ['id' => 'usuarios', 'label' => 'Gestión de Usuarios', 'icon' => 'users', 'route' => 'admin.users'],
+                    ['id' => 'orientadores', 'label' => 'Orientadores', 'icon' => 'user-cog', 'route' => 'admin.orientadores'],
+                    ['id' => 'reportes', 'label' => 'Reportes Generales', 'icon' => 'chart', 'route' => 'admin.reportes'],
+                    ['id' => 'configuracion', 'label' => 'Configuración', 'icon' => 'settings', 'route' => 'admin.configuracion'],
                 ];
             } elseif ($role == 2) { // Orientador
                 $menuItems = [
@@ -52,13 +52,13 @@
 
         @foreach($menuItems as $item)
             @php
-                // Lógica de activo: Si la ruta actual contiene el ID del item (ej: 'dashboard' o 'usuarios')
-                // Ajusta 'dashboard' según el nombre real de tu ruta en web.php
-                $isActive = request()->routeIs($item['id']) || (request()->path() == $item['id']);
-                $route = Route::has($item['id']) ? route($item['id']) : '#';
+                $isActive = request()->routeIs($item['route']) || request()->is($item['id'] . '*');
+                
+                $routeName = $item['route'] ?? '#';
+                $routeUrl = Route::has($routeName) ? route($routeName) : '#';
             @endphp
 
-            <a href="{{ $route }}"
+            <a href="{{ $routeUrl }}"
                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 transition-all
                {{ $isActive 
                   ? 'bg-teal-50 text-teal-700' 

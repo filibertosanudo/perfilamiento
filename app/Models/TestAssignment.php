@@ -9,9 +9,10 @@ class TestAssignment extends Model
 {
     protected $fillable = [
         'test_id',
+        'assigned_by',
         'user_id',
         'group_id',
-        'assigned_by',
+        'institution_id',
         'assigned_at',
         'due_date',
         'active',
@@ -19,27 +20,71 @@ class TestAssignment extends Model
 
     protected $casts = [
         'assigned_at' => 'datetime',
-        'due_date' => 'date',
-        'active' => 'boolean',
+        'due_date'    => 'date',
+        'active'      => 'boolean',
     ];
 
-    public function test()
+
+    public function test(): BelongsTo
     {
         return $this->belongsTo(Test::class);
     }
 
-    public function user()
+    /**
+     * Orientador que realizó la asignación
+     */
+    public function assignedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_by');
+    }
+
+    /**
+     * Usuario individual asignado (nullable)
+     */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function group()
+    /**
+     * Grupo asignado (nullable)
+     */
+    public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class);
     }
 
-    public function advisor()
+    /**
+     * Institución asignada (nullable)
+     */
+    public function institution(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'assigned_by');
+        return $this->belongsTo(Institution::class);
+    }
+
+    /**
+     * Determina el tipo de asignación: 'user' | 'group' | 'institution'
+     */
+    public function getTargetTypeAttribute(): string
+    {
+        return match(true) {
+            !is_null($this->user_id)        => 'user',
+            !is_null($this->group_id)       => 'group',
+            !is_null($this->institution_id) => 'institution',
+            default                         => 'unknown',
+        };
+    }
+
+    /**
+     * Devuelve la entidad objetivo sin importar el tipo
+     */
+    public function getTargetAttribute(): Model|null
+    {
+        return match($this->target_type) {
+            'user'        => $this->user,
+            'group'       => $this->group,
+            'institution' => $this->institution,
+            default       => null,
+        };
     }
 }

@@ -19,7 +19,7 @@
 
         <!-- Librerías -->
         <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-        
+
     </head>
     <body class="font-sans antialiased bg-gray-50 text-gray-900">
         
@@ -38,5 +38,7 @@
 
         @stack('modals')
         @livewireScripts
+
+        @stack('scripts')
     </body>
 </html>

@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-[x-cloak] {
+[x-cloak] { display: none !important; }
+
+/* Oculta scrollbar horizontal pero mantiene scroll funcional */
+.scrollbar-none::-webkit-scrollbar {
     display: none;
+}
+.scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
