@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -13,8 +12,6 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     use HasApiTokens;
-
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory;
     use HasProfilePhoto;
     use Notifiable;
@@ -26,9 +23,16 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
+        'role_id',
+        'first_name',
+        'last_name',
+        'second_last_name',
         'email',
         'password',
+        'birth_date',
+        'phone',
+        'registered_at',
+        'active',
     ];
 
     /**
@@ -53,7 +57,7 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * The attributes that should be cast.
      *
      * @return array<string, string>
      */
@@ -61,7 +65,18 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'registered_at'     => 'datetime',
+            'birth_date'        => 'date',
+            'active'            => 'boolean',
+            'password'          => 'hashed',
         ];
+    }
+
+    /**
+     * Relación: un usuario pertenece a un rol
+     */
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
     }
 }
