@@ -37,26 +37,61 @@
     {{-- TABLA DE USUARIOS --}}
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
 
-        {{-- Cabecera: contador + buscador --}}
-        <div class="px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <h3 class="text-base font-semibold text-gray-900">
-                Usuarios Registrados
-                <span class="ml-1.5 text-gray-400 font-normal text-sm">({{ $totalUsers }})</span>
-            </h3>
-            <div class="relative w-full sm:w-72">
-                <div class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
-                    </svg>
+        {{-- Cabecera: contador + filtros + buscador --}}
+        <div class="px-6 py-4 space-y-4">
+            
+            {{-- Fila 1: Título + Toggle Inactivos --}}
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <h3 class="text-base font-semibold text-gray-900">
+                        Usuarios Registrados
+                        <span class="ml-1.5 text-gray-400 font-normal text-sm">({{ $users->total() }})</span>
+                    </h3>
+                    
+                    {{-- Toggle para mostrar inactivos --}}
+                    <label class="flex items-center gap-2 cursor-pointer group">
+                        <div class="relative">
+                            <input type="checkbox" 
+                                wire:model.live="showInactive"
+                                class="sr-only peer">
+                            <div class="w-10 h-6 bg-gray-200 rounded-full peer peer-checked:bg-teal-600 transition-colors"></div>
+                            <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4"></div>
+                        </div>
+                        <span class="text-xs font-medium text-gray-600 group-hover:text-gray-900">
+                            Mostrar inactivos
+                        </span>
+                    </label>
                 </div>
-                <input
-                    wire:model.live.debounce.300ms="search"
-                    type="text"
-                    placeholder="Buscar por nombre, email o institución..."
-                    class="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors"
-                >
+            </div>
+
+            {{-- Fila 2: Filtros + Buscador --}}
+            <div class="flex flex-col sm:flex-row gap-3">
+                
+                {{-- Filtro por tipo de usuario --}}
+                <select wire:model.live="filterRole"
+                    class="w-full sm:w-48 border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors">
+                    <option value="">Todos los tipos</option>
+                    <option value="1">Solo Admins</option>
+                    <option value="2">Solo Orientadores</option>
+                    <option value="3">Solo Usuarios</option>
+                </select>
+
+                {{-- Buscador --}}
+                <div class="relative flex-1">
+                    <div class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                        </svg>
+                    </div>
+                    <input
+                        wire:model.live.debounce.300ms="search"
+                        type="text"
+                        placeholder="Buscar por nombre, email o institución..."
+                        class="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors"
+                    >
+                </div>
             </div>
         </div>
 
@@ -65,13 +100,89 @@
             <table class="min-w-full">
                 <thead>
                     <tr class="border-y border-gray-100 bg-gray-50/60">
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Usuario</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Institución</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tipo</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Orientador(es)</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tests Completados</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Estado</th>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>
+                        
+                        {{-- Usuario - Ordenable --}}
+                        <th wire:click="sortBy('first_name')" 
+                            class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors group">
+                            <div class="flex items-center gap-1">
+                                Usuario
+                                @if($sortField === 'first_name')
+                                    <svg class="w-4 h-4 {{ $sortDirection === 'asc' ? '' : 'rotate-180' }} transition-transform" 
+                                        xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" 
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="m18 15-6-6-6 6"/>
+                                    </svg>
+                                @else
+                                    <svg class="w-4 h-4 opacity-0 group-hover:opacity-40 transition-opacity" 
+                                        xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" 
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/>
+                                    </svg>
+                                @endif
+                            </div>
+                        </th>
+
+                        {{-- Institución - No ordenable --}}
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Institución
+                        </th>
+
+                        {{-- Tipo - Ordenable --}}
+                        <th wire:click="sortBy('role_id')" 
+                            class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors group">
+                            <div class="flex items-center gap-1">
+                                Tipo
+                                @if($sortField === 'role_id')
+                                    <svg class="w-4 h-4 {{ $sortDirection === 'asc' ? '' : 'rotate-180' }} transition-transform" 
+                                        xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" 
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="m18 15-6-6-6 6"/>
+                                    </svg>
+                                @else
+                                    <svg class="w-4 h-4 opacity-0 group-hover:opacity-40 transition-opacity" 
+                                        xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" 
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/>
+                                    </svg>
+                                @endif
+                            </div>
+                        </th>
+
+                        {{-- Orientador - No ordenable --}}
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Orientador(es)
+                        </th>
+
+                        {{-- Tests - No ordenable aún (TODO) --}}
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Tests Completados
+                        </th>
+
+                        {{-- Estado - Ordenable --}}
+                        <th wire:click="sortBy('active')" 
+                            class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors group">
+                            <div class="flex items-center gap-1">
+                                Estado
+                                @if($sortField === 'active')
+                                    <svg class="w-4 h-4 {{ $sortDirection === 'asc' ? '' : 'rotate-180' }} transition-transform" 
+                                        xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" 
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="m18 15-6-6-6 6"/>
+                                    </svg>
+                                @else
+                                    <svg class="w-4 h-4 opacity-0 group-hover:opacity-40 transition-opacity" 
+                                        xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" 
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/>
+                                    </svg>
+                                @endif
+                            </div>
+                        </th>
+
+                        {{-- Acciones --}}
+                        <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Acciones
+                        </th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -157,7 +268,6 @@
 
                             @if($noAplica)
                                 <span class="text-xs text-gray-400 italic">No aplica</span>
-
                             @else
                                 @php
                                     $advisors = $user->groups->pluck('creator')->filter()->unique('id');
@@ -193,7 +303,6 @@
 
                         {{-- Tests Completados --}}
                         <td class="px-6 py-4 text-sm text-gray-700">
-                            {{-- TODO: reemplazar con $user->completed_tests_count cuando exitsa la relación --}}
                             @isset($user->completed_tests_count)
                                 {{ $user->completed_tests_count }}
                             @else
@@ -226,28 +335,41 @@
                                         <circle cx="12" cy="12" r="3"/>
                                     </svg>
                                 </button>
-                                <button wire:click="edit({{ $user->id }})"
-                                    class="p-1.5 hover:bg-gray-100 rounded-lg transition-colors" title="Editar">
-                                    <svg class="text-gray-500" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                        stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
-                                    </svg>
-                                </button>
-                                <button
-                                    wire:click="delete({{ $user->id }})"
-                                    wire:confirm="¿Seguro que deseas eliminar a {{ $user->first_name }} {{ $user->last_name }}? Esta acción no se puede deshacer."
-                                    class="p-1.5 hover:bg-red-50 rounded-lg transition-colors" title="Eliminar">
-                                    <svg class="text-red-500" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                        stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M3 6h18"/>
-                                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                                        <line x1="10" x2="10" y1="11" y2="17"/>
-                                        <line x1="14" x2="14" y1="11" y2="17"/>
-                                    </svg>
-                                </button>
+                                
+                                @if($user->active)
+                                    <button wire:click="edit({{ $user->id }})"
+                                        class="p-1.5 hover:bg-gray-100 rounded-lg transition-colors" title="Editar">
+                                        <svg class="text-gray-500" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+                                        </svg>
+                                    </button>
+                                    <button
+                                        wire:click="delete({{ $user->id }})"
+                                        wire:confirm="¿Seguro que deseas desactivar a {{ $user->first_name }} {{ $user->last_name }}?"
+                                        class="p-1.5 hover:bg-red-50 rounded-lg transition-colors" title="Desactivar">
+                                        <svg class="text-red-500" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+                                        </svg>
+                                    </button>
+                                @else
+                                    <button
+                                        wire:click="activate({{ $user->id }})"
+                                        wire:confirm="¿Reactivar a {{ $user->first_name }} {{ $user->last_name }}?"
+                                        class="p-1.5 hover:bg-green-50 rounded-lg transition-colors" title="Reactivar">
+                                        <svg class="text-green-600" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                                            <path d="M21 3v5h-5"/>
+                                            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                                            <path d="M8 16H3v5"/>
+                                        </svg>
+                                    </button>
+                                @endif
                             </div>
                         </td>
                     </tr>
@@ -261,8 +383,8 @@
                                 </svg>
                                 <div>
                                     <p class="text-sm font-semibold text-gray-500">No se encontraron usuarios</p>
-                                    @if($search)
-                                        <p class="text-xs mt-1">Intenta con otro término de búsqueda</p>
+                                    @if($search || $filterRole)
+                                        <p class="text-xs mt-1">Intenta ajustar los filtros de búsqueda</p>
                                     @endif
                                 </div>
                             </div>
@@ -275,11 +397,12 @@
 
         {{-- Paginación --}}
         <div class="px-6 py-3 border-t border-gray-100 bg-gray-50/40">
-            {{ $users->links() }}
+            {{ $users->links('vendor.pagination.tailwind') }}
         </div>
+
     </div>
 
-    {{-- MODAL CREAR / EDITAR --}}
+    {{-- MODAL --}}
     <div
         x-data="{ show: @entangle('isOpen') }"
         x-show="show"
@@ -289,39 +412,31 @@
         aria-modal="true"
     >
         <div class="flex items-end justify-center min-h-screen sm:items-center p-4">
-
-            {{-- Backdrop --}}
             <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm" wire:click="closeModal"></div>
-
-            {{-- Panel --}}
             <div class="relative bg-white rounded-xl shadow-2xl w-full sm:max-w-lg overflow-hidden">
-
-                {{-- Header --}}
                 <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                     <h3 class="text-base font-semibold text-gray-900">
-                        {{ $userId ? 'Editar Usuario' : 'Crear Usuario' }}
+                        {{ $userId ? ($isViewMode ? 'Ver Usuario' : 'Editar Usuario') : 'Crear Usuario' }}
                     </h3>
                     <button wire:click="closeModal"
                         class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-                            fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round">
+                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
                         </svg>
                     </button>
                 </div>
 
-                {{-- Body --}}
+                {{-- Body del modal --}}
                 <div class="px-6 py-5 space-y-4">
-
-                    {{-- Nombre + Apellido Paterno --}}
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">
                                 Nombre <span class="text-red-500">*</span>
                             </label>
-                            <input type="text" wire:model="first_name" placeholder="Juan"
-                                class="block w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors">
+                            <input type="text" wire:model.blur="first_name" placeholder="Juan"
+                                {{ $isViewMode ? 'disabled' : '' }}
+                                class="block w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed">
                             @error('first_name')
                                 <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span>
                             @enderror
@@ -330,57 +445,58 @@
                             <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">
                                 Apellido Paterno <span class="text-red-500">*</span>
                             </label>
-                            <input type="text" wire:model="last_name" placeholder="Pérez"
-                                class="block w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors">
+                            <input type="text" wire:model.blur="last_name" placeholder="Pérez"
+                                {{ $isViewMode ? 'disabled' : '' }}
+                                class="block w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed">
                             @error('last_name')
                                 <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span>
                             @enderror
                         </div>
                     </div>
 
-                    {{-- Apellido Materno --}}
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">
                             Apellido Materno
                         </label>
-                        <input type="text" wire:model="second_last_name" placeholder="García"
-                            class="block w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors">
+                        <input type="text" wire:model.blur="second_last_name" placeholder="García"
+                            {{ $isViewMode ? 'disabled' : '' }}
+                            class="block w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed">
                         @error('second_last_name')
                             <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span>
                         @enderror
                     </div>
 
-                    {{-- Correo --}}
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">
                             Correo Electrónico <span class="text-red-500">*</span>
                         </label>
-                        <input type="email" wire:model="email" placeholder="usuario@institucion.edu"
-                            class="block w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors">
+                        <input type="email" wire:model.blur="email" placeholder="usuario@institucion.edu"
+                            {{ $isViewMode ? 'disabled' : '' }}
+                            class="block w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed">
                         @error('email')
                             <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span>
                         @enderror
                     </div>
 
-                    {{-- Teléfono --}}
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">
                             Teléfono
                         </label>
-                        <input type="text" wire:model="phone" placeholder="(555) 000-0000"
-                            class="block w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors">
+                        <input type="text" wire:model.blur="phone" placeholder="(555) 000-0000"
+                            {{ $isViewMode ? 'disabled' : '' }}
+                            class="block w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed">
                         @error('phone')
                             <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span>
                         @enderror
                     </div>
 
-                    {{-- Institución --}}
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">
                             Institución
                         </label>
-                        <select wire:model="institution_id"
-                            class="block w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors">
+                        <select wire:model.blur="institution_id"
+                            {{ $isViewMode ? 'disabled' : '' }}
+                            class="block w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed">
                             <option value="">Sin institución</option>
                             @foreach($institutions as $institution)
                                 <option value="{{ $institution->id }}">{{ $institution->name }}</option>
@@ -391,14 +507,14 @@
                         @enderror
                     </div>
 
-                    {{-- Tipo de usuario + Estado --}}
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">
                                 Tipo de Usuario <span class="text-red-500">*</span>
                             </label>
-                            <select wire:model="role_id"
-                                class="block w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors">
+                            <select wire:model.blur="role_id"
+                                {{ $isViewMode ? 'disabled' : '' }}
+                                class="block w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed">
                                 <option value="">Seleccionar...</option>
                                 <option value="1">Admin</option>
                                 <option value="2">Orientador</option>
@@ -412,26 +528,32 @@
                             <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">
                                 Estado
                             </label>
-                            <select wire:model="active"
-                                class="block w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors">
+                            <select wire:model.blur="active"
+                                {{ $isViewMode ? 'disabled' : '' }}
+                                class="block w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed">
                                 <option value="1">Activo</option>
                                 <option value="0">Inactivo</option>
                             </select>
                         </div>
                     </div>
-
                 </div>
 
-                {{-- Footer --}}
                 <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/60 flex justify-end gap-2">
-                    <button type="button" wire:click="closeModal"
-                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none transition-colors">
-                        Cancelar
-                    </button>
-                    <button type="button" wire:click="store"
-                        class="px-4 py-2 text-sm font-semibold text-white bg-teal-600 rounded-lg hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors">
-                        {{ $userId ? 'Guardar Cambios' : 'Crear Usuario' }}
-                    </button>
+                    @if($isViewMode)
+                        <button type="button" wire:click="closeModal"
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none transition-colors">
+                            Cerrar
+                        </button>
+                    @else
+                        <button type="button" wire:click="closeModal"
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none transition-colors">
+                            Cancelar
+                        </button>
+                        <button type="button" wire:click="store"
+                            class="px-4 py-2 text-sm font-semibold text-white bg-teal-600 rounded-lg hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors">
+                            {{ $userId ? 'Guardar Cambios' : 'Crear Usuario' }}
+                        </button>
+                    @endif
                 </div>
             </div>
         </div>

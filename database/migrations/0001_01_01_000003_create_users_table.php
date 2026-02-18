@@ -38,6 +38,8 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->foreignId('current_team_id')->nullable();
             $table->string('profile_photo_path', 2048)->nullable();
+            
+            $table->timestamps();
 
             $table->index('registered_at',  'idx_users_registered_at');
             $table->index('institution_id', 'idx_users_institution');
