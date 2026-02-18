@@ -28,7 +28,7 @@
                 $menuItems = [
                     ['id' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'dashboard', 'route' => 'dashboard'],
                     ['id' => 'usuarios', 'label' => 'Gestión de Usuarios', 'icon' => 'users', 'route' => 'admin.users'],
-                    ['id' => 'orientadores', 'label' => 'Orientadores', 'icon' => 'user-cog', 'route' => 'admin.orientadores'],
+                    ['id' => 'instituciones', 'label' => 'Instituciones', 'icon' => 'user-cog', 'route' => 'admin.instituciones'],
                     ['id' => 'reportes', 'label' => 'Reportes Generales', 'icon' => 'chart', 'route' => 'admin.reportes'],
                     ['id' => 'configuracion', 'label' => 'Configuración', 'icon' => 'settings', 'route' => 'admin.configuracion'],
                 ];
