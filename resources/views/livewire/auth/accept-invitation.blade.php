@@ -58,6 +58,25 @@
             {{-- Formulario para crear contraseña --}}
             <form wire:submit="submit" class="mt-8 space-y-6">
                 <div class="space-y-4">
+                <div x-data="{
+                    password: @entangle('password'),
+                    checks: {
+                        length: false,
+                        uppercase: false,
+                        lowercase: false,
+                        number: false,
+                        special: false
+                    },
+                    validatePassword() {
+                        this.checks.length = this.password.length >= 12;
+                        this.checks.uppercase = /[A-Z]/.test(this.password);
+                        this.checks.lowercase = /[a-z]/.test(this.password);
+                        this.checks.number = /[0-9]/.test(this.password);
+                        this.checks.special = /[\W_]/.test(this.password);
+                    }
+                }" x-init="$watch('password', () => validatePassword())">
+
+                    {{-- Inputs de contraseña --}}
                     <div>
                         <label for="password" class="block text-sm font-medium text-gray-700">
                             Contraseña <span class="text-red-500">*</span>
@@ -67,7 +86,7 @@
                             type="password"
                             id="password"
                             class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 shadow-sm focus:ring-teal-500 focus:border-teal-500"
-                            placeholder="Mínimo 8 caracteres"
+                            placeholder="Mínimo 12 caracteres"
                         >
                         @error('password')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -87,14 +106,48 @@
                         >
                     </div>
 
-                    {{-- Indicadores de fortaleza --}}
-                    <div class="text-xs text-gray-600 space-y-1">
-                        <p class="font-medium">Tu contraseña debe contener:</p>
-                        <ul class="list-disc list-inside space-y-0.5">
-                            <li>Al menos 8 caracteres</li>
-                            <li>Recomendado: mayúsculas, minúsculas y números</li>
+                    {{-- Indicadores de requisitos --}}
+                    <div class="bg-gray-50 rounded-lg p-4 text-xs text-gray-700 space-y-2">
+                        <p class="font-semibold text-sm mb-2">Requisitos de seguridad:</p>
+                        <ul class="space-y-1.5">
+                            <li class="flex items-start gap-2 transition-colors" :class="checks.length ? 'text-gray-700' : 'text-gray-400'">
+                                <span class="mt-0.5 font-bold" :class="checks.length ? 'text-teal-600' : 'text-red-500'">
+                                    <span x-show="checks.length">✓</span>
+                                    <span x-show="!checks.length">✗</span>
+                                </span>
+                                <span>Mínimo <strong>12 caracteres</strong></span>
+                            </li>
+                            <li class="flex items-start gap-2 transition-colors" :class="checks.uppercase ? 'text-gray-700' : 'text-gray-400'">
+                                <span class="mt-0.5 font-bold" :class="checks.uppercase ? 'text-teal-600' : 'text-red-500'">
+                                    <span x-show="checks.uppercase">✓</span>
+                                    <span x-show="!checks.uppercase">✗</span>
+                                </span>
+                                <span>Al menos <strong>1 letra mayúscula</strong> (A-Z)</span>
+                            </li>
+                            <li class="flex items-start gap-2 transition-colors" :class="checks.lowercase ? 'text-gray-700' : 'text-gray-400'">
+                                <span class="mt-0.5 font-bold" :class="checks.lowercase ? 'text-teal-600' : 'text-red-500'">
+                                    <span x-show="checks.lowercase">✓</span>
+                                    <span x-show="!checks.lowercase">✗</span>
+                                </span>
+                                <span>Al menos <strong>1 letra minúscula</strong> (a-z)</span>
+                            </li>
+                            <li class="flex items-start gap-2 transition-colors" :class="checks.number ? 'text-gray-700' : 'text-gray-400'">
+                                <span class="mt-0.5 font-bold" :class="checks.number ? 'text-teal-600' : 'text-red-500'">
+                                    <span x-show="checks.number">✓</span>
+                                    <span x-show="!checks.number">✗</span>
+                                </span>
+                                <span>Al menos <strong>1 número</strong> (0-9)</span>
+                            </li>
+                            <li class="flex items-start gap-2 transition-colors" :class="checks.special ? 'text-gray-700' : 'text-gray-400'">
+                                <span class="mt-0.5 font-bold" :class="checks.special ? 'text-teal-600' : 'text-red-500'">
+                                    <span x-show="checks.special">✓</span>
+                                    <span x-show="!checks.special">✗</span>
+                                </span>
+                                <span>Al menos <strong>1 carácter especial</strong> (!@#$%...)</span>
+                            </li>
                         </ul>
                     </div>
+                </div>
                 </div>
 
                 <button
