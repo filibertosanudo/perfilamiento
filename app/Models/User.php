@@ -32,6 +32,9 @@ class User extends Authenticatable
         'phone',
         'registered_at',
         'active',
+        'invitation_token',
+        'invitation_sent_at',
+        'invitation_accepted_at',
     ];
 
     protected $hidden = [
@@ -53,9 +56,25 @@ class User extends Authenticatable
             'birth_date'        => 'date',
             'active'            => 'boolean',
             'password'          => 'hashed',
+            'invitation_sent_at'      => 'datetime',
+            'invitation_accepted_at'  => 'datetime',
         ];
     }
 
+    // Helper para verificar si ya aceptó la invitación
+    public function hasAcceptedInvitation(): bool
+    {
+        return !is_null($this->invitation_accepted_at);
+    }
+
+    // Helper para verificar si el token de invitación expiró
+    public function invitationExpired(): bool
+    {
+        if (!$this->invitation_sent_at) {
+            return true;
+        }
+        return $this->invitation_sent_at->addHours(72)->isPast();
+    }
 
     /**
      * Rol del usuario

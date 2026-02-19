@@ -26,7 +26,10 @@ return new class extends Migration
             $table->string('second_last_name', 100)->nullable();
 
             $table->string('email', 150)->unique();
-            $table->string('password', 255);
+            $table->string('password', 255)->nullable();
+            $table->string('invitation_token', 64)->nullable();
+            $table->timestamp('invitation_sent_at')->nullable();
+            $table->timestamp('invitation_accepted_at')->nullable();
 
             $table->date('birth_date')->nullable();
             $table->string('phone', 20)->nullable();

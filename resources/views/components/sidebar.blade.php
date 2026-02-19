@@ -34,18 +34,18 @@
                 ];
             } elseif ($role == 2) { // Orientador
                 $menuItems = [
-                    ['id' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'dashboard'],
-                    ['id' => 'usuarios', 'label' => 'Mis Usuarios', 'icon' => 'users'],
-                    ['id' => 'asignar-tests', 'label' => 'Asignar Tests', 'icon' => 'clipboard'],
-                    ['id' => 'resultados', 'label' => 'Resultados', 'icon' => 'file-text'],
-                    ['id' => 'estadisticas', 'label' => 'Estadísticas', 'icon' => 'chart'],
+                    ['id' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'dashboard', 'route' => 'dashboard'],
+                    ['id' => 'usuarios', 'label' => 'Mis Usuarios', 'icon' => 'users', 'route' => 'orientador.users'],
+                    ['id' => 'asignar-tests', 'label' => 'Asignar Tests', 'icon' => 'clipboard', 'route' => 'orientador.asignar-tests'],
+                    ['id' => 'resultados', 'label' => 'Resultados', 'icon' => 'file-text', 'route' => 'orientador.resultados'],
+                    ['id' => 'estadisticas', 'label' => 'Estadísticas', 'icon' => 'chart', 'route' => 'orientador.estadisticas'],
                 ];
             } else { // Usuario
                 $menuItems = [
-                    ['id' => 'dashboard', 'label' => 'Mi Dashboard', 'icon' => 'dashboard'],
-                    ['id' => 'mis-tests', 'label' => 'Mis Tests', 'icon' => 'clipboard'],
-                    ['id' => 'mis-resultados', 'label' => 'Mis Resultados', 'icon' => 'file-text'],
-                    ['id' => 'perfil', 'label' => 'Mi Perfil', 'icon' => 'user'],
+                    ['id' => 'dashboard', 'label' => 'Mi Dashboard', 'icon' => 'dashboard', 'route' => 'dashboard'],
+                    ['id' => 'mis-tests', 'label' => 'Mis Tests', 'icon' => 'clipboard', 'route' => 'usuario.mis-tests'],
+                    ['id' => 'mis-resultados', 'label' => 'Mis Resultados', 'icon' => 'file-text', 'route' => 'usuario.mis-resultados'],
+                    ['id' => 'perfil', 'label' => 'Mi Perfil', 'icon' => 'user', 'route' => 'usuario.perfil'],
                 ];
             }
         @endphp

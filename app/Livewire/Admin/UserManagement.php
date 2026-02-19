@@ -7,6 +7,8 @@ use Livewire\WithPagination;
 use Livewire\Attributes\Renderless;
 use App\Models\User;
 use App\Models\Institution;
+use Illuminate\Support\Str;
+use App\Notifications\UserInvitation;
 
 class UserManagement extends Component
 {
@@ -136,7 +138,9 @@ class UserManagement extends Component
             'institution_id.exists'   => 'La institución seleccionada no existe.',
         ]);
 
-        User::updateOrCreate(
+        $invitationToken = \Illuminate\Support\Str::random(64);
+
+        $user = User::updateOrCreate(
             ['id' => $this->userId],
             [
                 'first_name'       => trim($this->first_name),
@@ -147,16 +151,57 @@ class UserManagement extends Component
                 'institution_id'   => $this->institution_id,
                 'role_id'          => $this->role_id,
                 'active'           => $this->active,
-                'password'         => $this->userId
+                
+                // Solo generar token si es usuario nuevo
+                'invitation_token'   => $this->userId ? null : $invitationToken,
+                'invitation_sent_at' => $this->userId ? null : now(),
+                
+                // Dejar password null si es nuevo (lo pondrá el usuario)
+                'password' => $this->userId
                     ? User::find($this->userId)->password
-                    : bcrypt('password123'),
+                    : null,
             ]
         );
 
-        session()->flash('message',
-            $this->userId ? 'Usuario actualizado correctamente.' : 'Usuario creado exitosamente.');
+        // Enviar email de invitación si es usuario nuevo
+        if (!$this->userId) {
+            try {
+                $user->notify(new \App\Notifications\UserInvitation());
+                $message = 'Usuario creado. Se ha enviado un correo de invitación a ' . $user->email;
+            } catch (\Exception $e) {
+                \Log::error('Error al enviar invitación: ' . $e->getMessage());
+                $message = 'Usuario creado, pero hubo un error al enviar el correo de invitación.';
+            }
+        } else {
+            $message = 'Usuario actualizado correctamente.';
+        }
+
+        session()->flash('message', $message);
 
         $this->closeModal();
+    }
+
+    public function resendInvitation(int $userId): void
+    {
+        $user = User::findOrFail($userId);
+
+        if ($user->active || $user->hasAcceptedInvitation()) {
+            session()->flash('message', 'Error: No se puede reenviar la invitación a este usuario.');
+            return;
+        }
+
+        $user->update([
+            'invitation_token' => Str::random(64),
+            'invitation_sent_at' => now(),
+        ]);
+
+        try {
+            $user->notify(new UserInvitation());
+            session()->flash('message', 'Se ha reenviado la invitación a ' . $user->email);
+        } catch (\Exception $e) {
+            \Log::error('Error al reenviar invitación: ' . $e->getMessage());
+            session()->flash('message', 'Hubo un error al reenviar el correo de invitación.');
+        }
     }
 
     public function delete(int $id): void
