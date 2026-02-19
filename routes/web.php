@@ -22,8 +22,13 @@ Route::middleware([
         return view('admin.users');
     })->name('admin.users');
 
+    // Perfil
+    Route::get('/profile', function () {
+        return view('profile.show');
+    })->name('profile.show');
 });
 
+// Rutas públicas
 Route::get('/invitation/accept/{token}', AcceptInvitation::class)
     ->name('invitation.accept')
     ->middleware('signed');

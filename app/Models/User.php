@@ -229,4 +229,26 @@ class User extends Authenticatable
             'last_login_ip' => request()->ip(),
         ]);
     }
+
+    /**
+     * Obtener sesiones activas del usuario
+     */
+    public function activeSessions()
+    {
+        return \DB::table('sessions')
+            ->where('user_id', $this->id)
+            ->where('last_activity', '>', now()->subMinutes(config('session.lifetime'))->timestamp)
+            ->get();
+    }
+
+    /**
+     * Cerrar todas las sesiones excepto la actual
+     */
+    public function logoutOtherDevices()
+    {
+        \DB::table('sessions')
+            ->where('user_id', $this->id)
+            ->where('id', '!=', session()->getId())
+            ->delete();
+    }
 }
