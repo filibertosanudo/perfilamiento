@@ -35,6 +35,10 @@ class User extends Authenticatable
         'invitation_token',
         'invitation_sent_at',
         'invitation_accepted_at',
+        'failed_login_attempts',
+        'locked_until',         
+        'last_login_at',        
+        'last_login_ip',        
     ];
 
     protected $hidden = [
@@ -58,6 +62,8 @@ class User extends Authenticatable
             'password'          => 'hashed',
             'invitation_sent_at'      => 'datetime',
             'invitation_accepted_at'  => 'datetime',
+            'locked_until'            => 'datetime',
+            'last_login_at'           => 'datetime',
         ];
     }
 
@@ -171,5 +177,56 @@ class User extends Authenticatable
     public function hasGroup(): bool
     {
         return $this->groups()->exists();
+    }
+
+    // Helpers de seguridad y bloqueo de cuenta
+
+    /**
+     * Verifica si la cuenta está bloqueada
+     */
+    public function isLocked(): bool
+    {
+        if (!$this->locked_until) {
+            return false;
+        }
+        
+        if ($this->locked_until->isPast()) {
+            $this->update([
+                'locked_until' => null,
+                'failed_login_attempts' => 0,
+            ]);
+            return false;
+        }
+        
+        return true;
+    }
+
+    /**
+     * Incrementa intentos fallidos y bloquea si es necesario
+     */
+    public function incrementFailedAttempts(): void
+    {
+        $attempts = $this->failed_login_attempts + 1;
+        
+        $data = ['failed_login_attempts' => $attempts];
+        
+        if ($attempts >= 5) {
+            $data['locked_until'] = now()->addMinutes(15);
+        }
+        
+        $this->update($data);
+    }
+
+    /**
+     * Resetea intentos fallidos después de login exitoso
+     */
+    public function resetFailedAttempts(): void
+    {
+        $this->update([
+            'failed_login_attempts' => 0,
+            'locked_until' => null,
+            'last_login_at' => now(),
+            'last_login_ip' => request()->ip(),
+        ]);
     }
 }

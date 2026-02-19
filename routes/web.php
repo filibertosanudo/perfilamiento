@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Auth\AcceptInvitation;
+use App\Http\Controllers\Auth\CustomLoginController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -26,3 +27,6 @@ Route::middleware([
 Route::get('/invitation/accept/{token}', AcceptInvitation::class)
     ->name('invitation.accept')
     ->middleware('signed');
+
+Route::post('/login', [CustomLoginController::class, 'login'])->name('login');
+Route::post('/logout', [CustomLoginController::class, 'logout'])->name('logout');

@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Component;
+use App\Rules\SecurePassword;
 
 class AcceptInvitation extends Component
 {
@@ -34,11 +35,10 @@ class AcceptInvitation extends Component
         }
 
         $this->validate([
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'confirmed', new SecurePassword()],
         ], [
             'password.required' => 'La contraseña es obligatoria.',
-            'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
-            'password.confirmed' => 'La confirmación de la contraseña no coincide.',
+            'password.confirmed' => 'Las contraseñas no coinciden.',
         ]);
 
         $this->user->update([
@@ -49,8 +49,15 @@ class AcceptInvitation extends Component
             'email_verified_at' => now(),
         ]);
 
+        \Log::info('Usuario activó su cuenta', [
+            'user_id' => $this->user->id,
+            'email' => $this->user->email,
+        ]);
+
         Auth::login($this->user);
 
+        session()->flash('status', '¡Contraseña creada exitosamente!');
+        
         return redirect()->route('dashboard');
     }
 

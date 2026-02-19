@@ -31,6 +31,11 @@ return new class extends Migration
             $table->timestamp('invitation_sent_at')->nullable();
             $table->timestamp('invitation_accepted_at')->nullable();
 
+            $table->integer('failed_login_attempts')->default(0);
+            $table->timestamp('locked_until')->nullable();
+            $table->timestamp('last_login_at')->nullable();
+            $table->string('last_login_ip', 45)->nullable();
+
             $table->date('birth_date')->nullable();
             $table->string('phone', 20)->nullable();
 
