@@ -369,6 +369,19 @@
                                             <path d="M8 16H3v5"/>
                                         </svg>
                                     </button>
+
+                                    {{-- Botón para reenviar invitación si ha expirado y no ha sido aceptada --}}
+                                    @if(!$user->hasAcceptedInvitation() && $user->invitationExpired())
+                                        <button
+                                            wire:click="resendInvitation({{ $user->id }})"
+                                            wire:confirm="Se enviará un nuevo correo de invitación a {{ $user->email }}. ¿Continuar?"
+                                            class="p-1.5 hover:bg-blue-50 rounded-lg transition-colors" title="Reenviar invitación">
+                                            <svg class="text-blue-500" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M22 2L15 22l-4-9-9-4 20-5z"/>
+                                                <path d="M22 2L11 13"/>
+                                            </svg>
+                                        </button>
+                                    @endif
                                 @endif
                             </div>
                         </td>
