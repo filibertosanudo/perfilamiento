@@ -9,10 +9,13 @@ use App\Models\User;
 use App\Models\Institution;
 use Illuminate\Support\Str;
 use App\Notifications\UserInvitation;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use App\Helpers\SecurityLog;
 
 class UserManagement extends Component
 {
     use WithPagination;
+    use AuthorizesRequests;
 
     // Búsqueda y filtros 
     public string $search = '';
@@ -73,8 +76,16 @@ class UserManagement extends Component
         $this->dispatch('modal-closed');
     }
 
+    // Verificar permisos al montar el componente 
+    public function mount()
+    {
+        // Solo admin puede gestionar usuarios
+        $this->authorize('viewAny', User::class);
+    }
+
     public function create(): void
     {
+        $this->authorize('create', User::class);
         $this->resetInputFields();
         $this->isViewMode = false;
         $this->openModal();
@@ -83,6 +94,7 @@ class UserManagement extends Component
     public function edit(int $id): void
     {
         $user = User::findOrFail($id);
+        $this->authorize('update', $user);
 
         $this->userId           = $user->id;
         $this->first_name       = $user->first_name;
@@ -100,12 +112,22 @@ class UserManagement extends Component
 
     public function viewUser(int $id): void
     {
+        $user = User::findOrFail($id);
+        $this->authorize('view', $user);
         $this->edit($id);
         $this->isViewMode = true;
     }
 
     public function store(): void
     {
+        // Autorizar según acción
+        if ($this->userId) {
+            $user = User::findOrFail($this->userId);
+            $this->authorize('update', $user);
+        } else {
+            $this->authorize('create', User::class);
+        }
+
         $this->validate([
             'first_name'  => 'required|string|min:2|max:100|regex:/^[\pL\s]+$/u',
             'last_name'   => 'required|string|min:2|max:100|regex:/^[\pL\s]+$/u',
@@ -138,6 +160,7 @@ class UserManagement extends Component
             'institution_id.exists'   => 'La institución seleccionada no existe.',
         ]);
 
+        $isNew = !$this->userId;
         $invitationToken = \Illuminate\Support\Str::random(64);
 
         $user = User::updateOrCreate(
@@ -153,26 +176,45 @@ class UserManagement extends Component
                 'active'           => $this->active,
                 
                 // Solo generar token si es usuario nuevo
-                'invitation_token'   => $this->userId ? null : $invitationToken,
-                'invitation_sent_at' => $this->userId ? null : now(),
+                'invitation_token'   => $isNew ? $invitationToken : null,
+                'invitation_sent_at' => $isNew ? now() : null,
                 
                 // Dejar password null si es nuevo (lo pondrá el usuario)
-                'password' => $this->userId
-                    ? User::find($this->userId)->password
-                    : null,
+                'password' => $isNew
+                    ? null
+                    : User::find($this->userId)->password,
             ]
         );
 
         // Enviar email de invitación si es usuario nuevo
-        if (!$this->userId) {
+        if ($isNew) {
             try {
                 $user->notify(new \App\Notifications\UserInvitation());
+                
+                SecurityLog::invitationSent(auth()->user(), $user);
+                
                 $message = 'Usuario creado. Se ha enviado un correo de invitación a ' . $user->email;
             } catch (\Exception $e) {
                 \Log::error('Error al enviar invitación: ' . $e->getMessage());
                 $message = 'Usuario creado, pero hubo un error al enviar el correo de invitación.';
             }
         } else {
+            SecurityLog::permissionChange(
+                auth()->user(), 
+                $user, 
+                'Actualización de datos de usuario',
+                [
+                    'campos_actualizados' => [
+                        'first_name' => $this->first_name,
+                        'last_name' => $this->last_name,
+                        'email' => $this->email,
+                        'role_id' => $this->role_id,
+                        'institution_id' => $this->institution_id,
+                        'active' => $this->active,
+                    ]
+                ]
+            );
+            
             $message = 'Usuario actualizado correctamente.';
         }
 
@@ -207,14 +249,20 @@ class UserManagement extends Component
     public function delete(int $id): void
     {
         $user = User::findOrFail($id);
+        $this->authorize('delete', $user);
         $user->update(['active' => false]);
+        SecurityLog::userDeactivated(auth()->user(), $user);
+        
         session()->flash('message', 'Usuario desactivado correctamente.');
     }
 
     public function activate(int $id): void
     {
         $user = User::findOrFail($id);
+        $this->authorize('delete', $user);
         $user->update(['active' => true]);
+        SecurityLog::userReactivated(auth()->user(), $user);
+        
         session()->flash('message', 'Usuario reactivado correctamente.');
     }
 

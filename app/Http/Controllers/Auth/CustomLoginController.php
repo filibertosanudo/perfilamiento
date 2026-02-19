@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
 use App\Models\User;
+use App\Helpers\SecurityLog;
 
 class CustomLoginController extends Controller
 {
@@ -32,6 +33,8 @@ class CustomLoginController extends Controller
             $this->incrementRateLimiter($request);
             sleep(rand(1, 3));
             
+            SecurityLog::loginFailed($request->email);
+            
             throw ValidationException::withMessages([
                 'email' => ['Las credenciales proporcionadas son incorrectas.'],
             ]);
@@ -40,6 +43,8 @@ class CustomLoginController extends Controller
         // Verificar si la cuenta está bloqueada
         if ($user->isLocked()) {
             $minutesLeft = now()->diffInMinutes($user->locked_until);
+            
+            SecurityLog::accountLocked($user);
             
             throw ValidationException::withMessages([
                 'email' => ["Cuenta bloqueada. Intente nuevamente en {$minutesLeft} minutos."],
@@ -63,12 +68,7 @@ class CustomLoginController extends Controller
             $user->resetFailedAttempts();
             RateLimiter::clear($this->throttleKey($request));
 
-            \Log::info('Login exitoso', [
-                'user_id' => $user->id,
-                'email' => $user->email,
-                'ip' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-            ]);
+            SecurityLog::loginSuccess($user);
 
             return redirect()->intended(route('dashboard'));
         }
@@ -81,11 +81,7 @@ class CustomLoginController extends Controller
         $delay = min($user->failed_login_attempts, 5);
         sleep($delay);
 
-        \Log::warning('Intento de login fallido', [
-            'email' => $request->email,
-            'ip' => $request->ip(),
-            'attempts' => $user->failed_login_attempts,
-        ]);
+        SecurityLog::loginFailed($request->email, $user->failed_login_attempts);
 
         throw ValidationException::withMessages([
             'email' => ['Las credenciales proporcionadas son incorrectas.'],
@@ -139,11 +135,6 @@ class CustomLoginController extends Controller
     public function logout(Request $request)
     {
         $user = Auth::user();
-
-        \Log::info('Logout', [
-            'user_id' => $user->id,
-            'email' => $user->email,
-        ]);
 
         Auth::guard('web')->logout();
 
