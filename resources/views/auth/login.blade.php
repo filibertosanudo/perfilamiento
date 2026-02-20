@@ -9,10 +9,10 @@
                     </svg>
                 </div>
                 <h1 class="text-3xl font-bold text-gray-900 mb-2 leading-tight">
-                    Plataforma de Perfilamiento Integral
+                    SIESI
                 </h1>
                 <p class="text-gray-600 text-sm font-medium">
-                    Sistema de evaluación y seguimiento institucional
+                    Sistema Integral de Evaluación y Seguimiento Institucional
                 </p>
             </div>
 
