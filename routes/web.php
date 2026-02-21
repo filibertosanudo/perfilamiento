@@ -55,10 +55,10 @@ Route::middleware([
 
     Route::middleware(['role:advisor'])->prefix('orientador')->name('orientador.')->group(function () {
         
-        // Mis Usuarios (TODO)
-        // Route::get('/usuarios', function () {
-        //     return view('orientador.users');
-        // })->name('users');
+        // Mis Usuarios
+        Route::get('/usuarios', function () {
+            return view('orientador.users');
+        })->name('users');
 
         // Asignar Tests (TODO)
         // Route::get('/asignar-tests', function () {

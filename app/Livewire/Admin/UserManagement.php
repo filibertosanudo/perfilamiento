@@ -11,22 +11,24 @@ use Illuminate\Support\Str;
 use App\Notifications\UserInvitation;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use App\Helpers\SecurityLog;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 class UserManagement extends Component
 {
     use WithPagination;
     use AuthorizesRequests;
 
-    // Búsqueda y filtros 
+    // Búsqueda y filtros
     public string $search = '';
     public bool $showInactive = false;
     public ?int $filterRole = null;  // 1=Admin, 2=Orientador, 3=Usuario, null=Todos
 
-    // Ordenamiento 
-    public string $sortField = 'id';      // campo por el que ordenar
-    public string $sortDirection = 'desc'; // dirección: asc|desc
+    // Ordenamiento
+    public string $sortField = 'id';
+    public string $sortDirection = 'desc';
 
-    //  Estado del modal 
+    // Estado del modal
     public bool $isOpen = false;
     public bool $isViewMode = false;
 
@@ -41,6 +43,18 @@ class UserManagement extends Component
     public ?int  $role_id          = null;
     public int   $active           = 1;
 
+    // Verificar permisos al montar
+    public function mount()
+    {
+        // Seguridad
+        $this->authorize('viewAny', User::class);
+
+        // UX / lógica de filtros
+        if (auth()->user()->role_id !== 1) {
+            $this->filterRole = 3;
+        }
+    }
+
     // Reset paginación al cambiar filtros
     public function updatingSearch(): void { $this->resetPage(); }
     public function updatingShowInactive(): void { $this->resetPage(); }
@@ -50,10 +64,8 @@ class UserManagement extends Component
     public function sortBy(string $field): void
     {
         if ($this->sortField === $field) {
-            // Si ya está ordenado por este campo, invertir dirección
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
         } else {
-            // Cambiar a nuevo campo, default DESC
             $this->sortField = $field;
             $this->sortDirection = 'desc';
         }
@@ -76,18 +88,19 @@ class UserManagement extends Component
         $this->dispatch('modal-closed');
     }
 
-    // Verificar permisos al montar el componente 
-    public function mount()
-    {
-        // Solo admin puede gestionar usuarios
-        $this->authorize('viewAny', User::class);
-    }
+    // CRUD
 
     public function create(): void
     {
         $this->authorize('create', User::class);
         $this->resetInputFields();
         $this->isViewMode = false;
+        
+        // Si es orientador, pre-seleccionar su institución
+        if (auth()->user()->role_id === 2) {
+            $this->institution_id = auth()->user()->institution_id;
+        }
+        
         $this->openModal();
     }
 
@@ -129,19 +142,19 @@ class UserManagement extends Component
         }
 
         $this->validate([
-            'first_name'  => 'required|string|min:2|max:100|regex:/^[\pL\s]+$/u',
-            'last_name'   => 'required|string|min:2|max:100|regex:/^[\pL\s]+$/u',
-            'email'       => [
+            'first_name'       => 'required|string|min:2|max:100|regex:/^[\pL\s]+$/u',
+            'last_name'        => 'required|string|min:2|max:100|regex:/^[\pL\s]+$/u',
+            'email'            => [
                 'required',
                 'email:rfc,dns',
                 'max:150',
                 'unique:users,email,' . $this->userId,
             ],
-            'role_id'     => 'required|integer|in:1,2,3',
+            'role_id'          => 'required|integer|in:1,2,3',
             'second_last_name' => 'nullable|string|max:100|regex:/^[\pL\s]+$/u',
             'phone'            => 'nullable|string|regex:/^[\d\s\-\(\)\+]+$/|min:10|max:20',
             'institution_id'   => 'nullable|exists:institutions,id',
-            'active'      => 'required|boolean',
+            'active'           => 'required|boolean',
         ], [
             'first_name.required'     => 'El nombre es obligatorio.',
             'first_name.min'          => 'El nombre debe tener al menos 2 caracteres.',
@@ -161,38 +174,29 @@ class UserManagement extends Component
         ]);
 
         $isNew = !$this->userId;
-        $invitationToken = \Illuminate\Support\Str::random(64);
+        $invitationToken = Str::random(64);
 
         $user = User::updateOrCreate(
             ['id' => $this->userId],
             [
-                'first_name'       => trim($this->first_name),
-                'last_name'        => trim($this->last_name),
-                'second_last_name' => $this->second_last_name ? trim($this->second_last_name) : null,
-                'email'            => strtolower(trim($this->email)),
-                'phone'            => $this->phone ? preg_replace('/\s+/', '', $this->phone) : null,
-                'institution_id'   => $this->institution_id,
-                'role_id'          => $this->role_id,
-                'active'           => $this->active,
-                
-                // Solo generar token si es usuario nuevo
+                'first_name'         => trim($this->first_name),
+                'last_name'          => trim($this->last_name),
+                'second_last_name'   => $this->second_last_name ? trim($this->second_last_name) : null,
+                'email'              => strtolower(trim($this->email)),
+                'phone'              => $this->phone ? preg_replace('/\s+/', '', $this->phone) : null,
+                'institution_id'     => $this->institution_id,
+                'role_id'            => $this->role_id,
+                'active'             => $this->active,
                 'invitation_token'   => $isNew ? $invitationToken : null,
                 'invitation_sent_at' => $isNew ? now() : null,
-                
-                // Dejar password null si es nuevo (lo pondrá el usuario)
-                'password' => $isNew
-                    ? null
-                    : User::find($this->userId)->password,
+                'password'           => $isNew ? null : User::find($this->userId)->password,
             ]
         );
 
-        // Enviar email de invitación si es usuario nuevo
         if ($isNew) {
             try {
-                $user->notify(new \App\Notifications\UserInvitation());
-                
+                $user->notify(new UserInvitation());
                 SecurityLog::invitationSent(auth()->user(), $user);
-                
                 $message = 'Usuario creado. Se ha enviado un correo de invitación a ' . $user->email;
             } catch (\Exception $e) {
                 \Log::error('Error al enviar invitación: ' . $e->getMessage());
@@ -205,21 +209,19 @@ class UserManagement extends Component
                 'Actualización de datos de usuario',
                 [
                     'campos_actualizados' => [
-                        'first_name' => $this->first_name,
-                        'last_name' => $this->last_name,
-                        'email' => $this->email,
-                        'role_id' => $this->role_id,
+                        'first_name'     => $this->first_name,
+                        'last_name'      => $this->last_name,
+                        'email'          => $this->email,
+                        'role_id'        => $this->role_id,
                         'institution_id' => $this->institution_id,
-                        'active' => $this->active,
+                        'active'         => $this->active,
                     ]
                 ]
             );
-            
             $message = 'Usuario actualizado correctamente.';
         }
 
         session()->flash('message', $message);
-
         $this->closeModal();
     }
 
@@ -233,12 +235,13 @@ class UserManagement extends Component
         }
 
         $user->update([
-            'invitation_token' => Str::random(64),
+            'invitation_token'   => Str::random(64),
             'invitation_sent_at' => now(),
         ]);
 
         try {
             $user->notify(new UserInvitation());
+            SecurityLog::invitationSent(auth()->user(), $user);
             session()->flash('message', 'Se ha reenviado la invitación a ' . $user->email);
         } catch (\Exception $e) {
             \Log::error('Error al reenviar invitación: ' . $e->getMessage());
@@ -250,6 +253,7 @@ class UserManagement extends Component
     {
         $user = User::findOrFail($id);
         $this->authorize('delete', $user);
+        
         $user->update(['active' => false]);
         SecurityLog::userDeactivated(auth()->user(), $user);
         
@@ -260,53 +264,106 @@ class UserManagement extends Component
     {
         $user = User::findOrFail($id);
         $this->authorize('delete', $user);
+        
         $user->update(['active' => true]);
         SecurityLog::userReactivated(auth()->user(), $user);
         
         session()->flash('message', 'Usuario reactivado correctamente.');
     }
 
-    // TODO: Validación en tiempo real con mensajes personalizados
-
-    // public function updated($propertyName)
-    // {
-    //     $this->validateOnly($propertyName, [
-    //         'first_name'  => 'required|string|min:2|max:100|regex:/^[\pL\s]+$/u',
-    //         'last_name'   => 'required|string|min:2|max:100|regex:/^[\pL\s]+$/u',
-    //         'email'       => 'required|email:rfc,dns|max:150|unique:users,email,' . $this->userId,
-    //         'phone'       => 'nullable|string|regex:/^[\d\s\-\(\)\+]+$/|min:10|max:20',
-    //     ]);
-    // }
-
-    // Render
+    // Render con filtrado adaptativo según rol
 
     public function render()
     {
+        $currentUser = auth()->user();
         $search = $this->search;
-        $institutionIds = $search
-            ? \DB::table('institutions')->where('name', 'like', '%' . $search . '%')->pluck('id')
-            : collect();
 
-        $users = User::with(['institution', 'groups.creator'])
-            ->when(!$this->showInactive, fn($q) => $q->where('active', true))
-            ->when($this->filterRole, fn($q) => $q->where('role_id', $this->filterRole))
-            ->where(function ($query) use ($search, $institutionIds) {
-                $query->where('first_name', 'like', '%' . $search . '%')
-                      ->orWhere('last_name',  'like', '%' . $search . '%')
-                      ->orWhere('email',      'like', '%' . $search . '%');
+        $institutionIds = $this->getInstitutionIdsBySearch($search);
 
-                if ($institutionIds->isNotEmpty()) {
-                    $query->orWhereIn('institution_id', $institutionIds);
-                }
-            })
+        $query = User::with(['institution', 'groups.creator'])
+            ->when(!$this->showInactive, fn ($q) => $q->where('active', true))
+            ->when($currentUser->role_id === 2, fn ($q) => $this->applyOrientadorRestrictions($q, $currentUser))
+            ->when(
+                $currentUser->role_id === 1 && $this->filterRole,
+                fn ($q) => $q->where('role_id', $this->filterRole)
+            )
+            ->where(fn ($q) => $this->applySearch($q, $search, $institutionIds));
+
+        $users = $query
             ->orderBy($this->sortField, $this->sortDirection)
             ->paginate(10);
 
         return view('livewire.admin.user-management', [
             'users'        => $users,
-            'totalUsers'   => User::count(),
-            'institutions' => Institution::where('active', true)->orderBy('name')->get(),
+            'totalUsers'   => $this->getTotalUsers($currentUser),
+            'institutions' => $this->getAvailableInstitutions($currentUser),
         ]);
+    }
+
+    /**
+     * Obtiene IDs de instituciones que coinciden con el término de búsqueda
+     */
+    private function getInstitutionIdsBySearch(?string $search): Collection
+    {
+        if (!$search) {
+            return collect();
+        }
+
+        return \DB::table('institutions')
+            ->where('name', 'like', "%{$search}%")
+            ->pluck('id');
+    }
+
+    /**
+     * Aplica restricciones de seguridad para orientadores
+     * Solo pueden ver usuarios role_id=3 de sus grupos
+     */
+    private function applyOrientadorRestrictions(Builder $query, User $currentUser): void
+    {
+        $query->where('role_id', 3)
+            ->whereHas('groups', function ($q) use ($currentUser) {
+                $q->where('creator_id', $currentUser->id);
+            });
+    }
+
+    /**
+     * Aplica filtros de búsqueda por nombre, email e institución
+     */
+    private function applySearch(Builder $query, ?string $search, Collection $institutionIds): void
+    {
+        $query->where(function ($q) use ($search, $institutionIds) {
+            if ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                ->orWhere('last_name',  'like', "%{$search}%")
+                ->orWhere('email',      'like', "%{$search}%");
+            }
+
+            if ($institutionIds->isNotEmpty()) {
+                $q->orWhereIn('institution_id', $institutionIds);
+            }
+        });
+    }
+
+    /**
+     * Obtiene instituciones disponibles según el rol del usuario
+     */
+    private function getAvailableInstitutions(User $currentUser): Collection
+    {
+        return $currentUser->role_id === 1
+            ? Institution::where('active', true)->orderBy('name')->get()
+            : Institution::where('id', $currentUser->institution_id)
+                ->where('active', true)
+                ->get();
+    }
+
+    /**
+     * Calcula el total de usuarios según el rol
+     */
+    private function getTotalUsers(User $currentUser): int
+    {
+        return $currentUser->role_id === 1
+            ? User::count()
+            : User::whereHas('groups', fn ($q) => $q->where('creator_id', $currentUser->id))->count();
     }
 
     // Privados
