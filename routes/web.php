@@ -104,6 +104,10 @@ Route::middleware([
         // Route::get('/tests', function () {
         //     return view('shared.tests');
         // })->name('tests.index');
+
+        Route::get('/grupos', function () {
+            return view('grupos.index');
+        })->name('grupos.index');
     });
 });
 
