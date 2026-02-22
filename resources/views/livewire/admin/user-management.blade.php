@@ -68,12 +68,24 @@
             <div class="flex flex-col sm:flex-row gap-3">
                 
                 {{-- Filtro por tipo de usuario --}}
-                <select wire:model.live="filterRole"
-                    class="w-full sm:w-48 border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors">
-                    <option value="">Todos los tipos</option>
-                    <option value="1">Solo Admins</option>
-                    <option value="2">Solo Orientadores</option>
-                    <option value="3">Solo Usuarios</option>
+                <select
+                    wire:model.live="filterRole"
+                    @if(auth()->user()->role_id !== 1) disabled @endif
+                    class="w-full sm:w-48 border border-gray-200 rounded-lg px-3 py-2 text-sm
+                        bg-gray-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500
+                        transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed">
+
+                    @if(auth()->user()->role_id === 1)
+                        {{-- Admin --}}
+                        <option value="">Todos los tipos</option>
+                        <option value="1">Solo Admins</option>
+                        <option value="2">Solo Orientadores</option>
+                        <option value="3">Solo Usuarios</option>
+                    @else
+                        {{-- Orientador --}}
+                        <option value="3">Solo Usuarios</option>
+                    @endif
+
                 </select>
 
                 {{-- Buscador --}}
@@ -270,10 +282,18 @@
                                 <span class="text-xs text-gray-400 italic">No aplica</span>
                             @else
                                 @php
-                                    $advisors = $user->groups->pluck('creator')->filter()->unique('id');
+                                    // Agrupar grupos por orientador para evitar repetición
+                                    $groupsByAdvisor = $user->groups->groupBy(function($group) {
+                                        return $group->creator_id;
+                                    })->filter(function($groups) {
+                                        return $groups->first()->creator !== null;
+                                    });
+                                    
+                                    $totalAdvisors = $groupsByAdvisor->count();
+                                    $displayAdvisors = $groupsByAdvisor->take(2);
                                 @endphp
 
-                                @if($advisors->isEmpty())
+                                @if($groupsByAdvisor->isEmpty())
                                     <span class="inline-flex items-center gap-1 text-xs font-medium text-red-500">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12"
                                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -285,17 +305,41 @@
                                         Sin asignar
                                     </span>
                                 @else
-                                    <div class="flex flex-col gap-1">
-                                        @foreach($advisors as $advisor)
+                                    <div class="flex flex-col gap-1.5">
+                                        @foreach($displayAdvisors as $advisorGroups)
+                                            @php
+                                                $advisor = $advisorGroups->first()->creator;
+                                                $groupCount = $advisorGroups->count();
+                                            @endphp
                                             <div class="flex items-center gap-1.5">
                                                 <div class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold shrink-0">
                                                     {{ strtoupper(substr($advisor->first_name, 0, 1)) }}
                                                 </div>
-                                                <span class="text-xs text-gray-700">
-                                                    {{ $advisor->first_name }} {{ $advisor->last_name }}
-                                                </span>
+                                                <div class="flex flex-col">
+                                                    <span class="text-xs text-gray-700 font-medium">
+                                                        {{ $advisor->first_name }} {{ $advisor->last_name }}
+                                                    </span>
+                                                    @if($groupCount > 1)
+                                                        <span class="text-xs text-gray-400">
+                                                            {{ $groupCount }} grupos
+                                                        </span>
+                                                    @else
+                                                        <span class="text-xs text-gray-400">
+                                                            {{ $advisorGroups->first()->name }}
+                                                        </span>
+                                                    @endif
+                                                </div>
                                             </div>
                                         @endforeach
+                                        
+                                        @if($totalAdvisors > 2)
+                                            <button 
+                                                wire:click="viewUser({{ $user->id }})"
+                                                class="text-xs text-teal-600 hover:text-teal-700 font-medium ml-6 text-left hover:underline"
+                                            >
+                                                Ver +{{ $totalAdvisors - 2 }} orientador(es) más
+                                            </button>
+                                        @endif
                                     </div>
                                 @endif
                             @endif
@@ -520,6 +564,7 @@
                         @enderror
                     </div>
 
+                    {{-- Tipo de usuario + Estado --}}
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">
@@ -529,9 +574,16 @@
                                 {{ $isViewMode ? 'disabled' : '' }}
                                 class="block w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed">
                                 <option value="">Seleccionar...</option>
-                                <option value="1">Admin</option>
-                                <option value="2">Orientador</option>
-                                <option value="3">Usuario</option>
+                                
+                                @if(auth()->user()->role_id === 1)
+                                    {{-- Admin puede crear cualquier rol --}}
+                                    <option value="1">Admin</option>
+                                    <option value="2">Orientador</option>
+                                    <option value="3">Usuario</option>
+                                @else
+                                    {{-- Orientador solo puede crear usuarios regulares --}}
+                                    <option value="3">Usuario</option>
+                                @endif
                             </select>
                             @error('role_id')
                                 <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span>
@@ -549,6 +601,101 @@
                             </select>
                         </div>
                     </div>
+
+                    {{-- Orientadores y Grupos --}}
+                    @if($isViewMode && $userId)
+                        @php
+                            $viewedUser = \App\Models\User::with(['groups.creator'])->find($userId);
+                            $userGroups = $viewedUser->groups ?? collect();
+                            $showOrientadores = $viewedUser && $viewedUser->role_id === 3 && $userGroups->isNotEmpty();
+                        @endphp
+
+                        @if($showOrientadores)
+                            <div class="pt-4 border-t border-gray-200">
+                                <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3">
+                                    Orientadores y Grupos Asignados
+                                </label>
+                                
+                                <div class="space-y-3">
+                                    @foreach($userGroups as $group)
+                                        <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                                            {{-- Grupo --}}
+                                            <div class="flex items-start gap-2 mb-2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" 
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                                    class="text-teal-600 shrink-0 mt-0.5">
+                                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                                    <circle cx="9" cy="7" r="4"/>
+                                                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                                </svg>
+                                                <div class="flex-1 min-w-0">
+                                                    <p class="text-sm font-semibold text-gray-900">
+                                                        {{ $group->name }}
+                                                    </p>
+                                                    @if($group->description)
+                                                        <p class="text-xs text-gray-500 mt-0.5">
+                                                            {{ $group->description }}
+                                                        </p>
+                                                    @endif
+                                                </div>
+                                            </div>
+
+                                            {{-- Orientador --}}
+                                            @if($group->creator)
+                                                <div class="flex items-center gap-2 ml-6 pl-3 border-l-2 border-indigo-200">
+                                                    <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold shrink-0">
+                                                        {{ strtoupper(substr($group->creator->first_name, 0, 1)) }}
+                                                    </div>
+                                                    <div class="flex-1 min-w-0">
+                                                        <p class="text-xs font-medium text-gray-700">
+                                                            {{ $group->creator->first_name }} {{ $group->creator->last_name }}
+                                                        </p>
+                                                        <p class="text-xs text-gray-500">
+                                                            Orientador
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            @endif
+
+                                            {{-- Fecha de ingreso al grupo --}}
+                                            @php
+                                                $joinedAt = $group->pivot->joined_at ?? null;
+                                            @endphp
+                                            @if($joinedAt)
+                                                <div class="mt-2 text-xs text-gray-400 ml-6">
+                                                    Ingresó: {{ \Carbon\Carbon::parse($joinedAt)->format('d/m/Y') }}
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @elseif($viewedUser && $viewedUser->role_id === 3)
+                            {{-- Usuario sin grupos asignados --}}
+                            <div class="pt-4 border-t border-gray-200">
+                                <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
+                                    Orientadores y Grupos Asignados
+                                </label>
+                                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                                    <div class="flex gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" 
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                            class="text-yellow-600 shrink-0 mt-0.5">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <line x1="12" x2="12" y1="8" y2="12"/>
+                                            <line x1="12" x2="12.01" y1="16" y2="16"/>
+                                        </svg>
+                                        <p class="text-xs text-yellow-800">
+                                            Este usuario no está asignado a ningún grupo aún.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    @endif
                 </div>
 
                 <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/60 flex justify-end gap-2">
