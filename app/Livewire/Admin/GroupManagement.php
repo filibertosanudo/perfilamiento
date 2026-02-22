@@ -35,6 +35,7 @@ class GroupManagement extends Component
     public string $name = '';
     public string $description = '';
     public ?int $institution_id = null;
+    public ?int $creator_id = null;
     public int $active = 1;
 
     // Modal de gestión de miembros
@@ -52,6 +53,15 @@ class GroupManagement extends Component
     // Reset paginación
     public function updatingSearch(): void { $this->resetPage(); }
     public function updatingShowInactive(): void { $this->resetPage(); }
+
+    // Actualizar lista de orientadores cuando cambia la institución
+    public function updatedInstitutionId(): void
+    {
+        // Si es admin y cambió la institución, resetear el orientador seleccionado
+        if (auth()->user()->role_id === 1) {
+            $this->creator_id = null;
+        }
+    }
 
     // Ordenamiento
     public function sortBy(string $field): void
@@ -89,9 +99,10 @@ class GroupManagement extends Component
         $this->resetInputFields();
         $this->isViewMode = false;
 
-        // Pre-seleccionar institución del orientador
+        // Pre-seleccionar institución y orientador según el rol
         if (auth()->user()->role_id === 2) {
             $this->institution_id = auth()->user()->institution_id;
+            $this->creator_id = auth()->id();
         }
 
         $this->openModal();
@@ -106,6 +117,7 @@ class GroupManagement extends Component
         $this->name = $group->name;
         $this->description = $group->description ?? '';
         $this->institution_id = $group->institution_id;
+        $this->creator_id = $group->creator_id;
         $this->active = $group->active ? 1 : 0;
         $this->isViewMode = false;
 
@@ -133,12 +145,15 @@ class GroupManagement extends Component
             'name' => 'required|string|min:3|max:150',
             'description' => 'nullable|string|max:500',
             'institution_id' => 'required|exists:institutions,id',
+            'creator_id' => 'required|exists:users,id',
             'active' => 'required|boolean',
         ], [
             'name.required' => 'El nombre del grupo es obligatorio.',
             'name.min' => 'El nombre debe tener al menos 3 caracteres.',
             'institution_id.required' => 'Debes seleccionar una institución.',
             'institution_id.exists' => 'La institución seleccionada no es válida.',
+            'creator_id.required' => 'Debes seleccionar un orientador.',
+            'creator_id.exists' => 'El orientador seleccionado no es válido.',
         ]);
 
         $isNew = !$this->groupId;
@@ -149,7 +164,7 @@ class GroupManagement extends Component
                 'name' => trim($this->name),
                 'description' => $this->description ? trim($this->description) : null,
                 'institution_id' => $this->institution_id,
-                'creator_id' => $isNew ? auth()->id() : Group::find($this->groupId)->creator_id,
+                'creator_id' => $this->creator_id,
                 'active' => $this->active,
                 'created_at' => $isNew ? now() : Group::find($this->groupId)->created_at,
             ]
@@ -159,8 +174,9 @@ class GroupManagement extends Component
             \Log::info('Grupo creado', [
                 'group_id' => $group->id,
                 'group_name' => $group->name,
-                'creator_id' => auth()->id(),
-                'creator_email' => auth()->user()->email,
+                'creator_id' => $group->creator_id,
+                'created_by_admin' => auth()->id(),
+                'created_by_email' => auth()->user()->email,
                 'institution_id' => $group->institution_id,
             ]);
             $message = 'Grupo creado exitosamente.';
@@ -168,6 +184,7 @@ class GroupManagement extends Component
             \Log::info('Grupo actualizado', [
                 'group_id' => $group->id,
                 'group_name' => $group->name,
+                'creator_id' => $group->creator_id,
                 'updated_by' => auth()->id(),
                 'updated_by_email' => auth()->user()->email,
             ]);
@@ -261,7 +278,6 @@ class GroupManagement extends Component
         }
         $group->users()->sync($syncData);
 
-        // Log de cambios
         if (!empty($added) || !empty($removed)) {
             \Log::info('Miembros del grupo actualizados', [
                 'group_id' => $group->id,
@@ -293,17 +309,16 @@ class GroupManagement extends Component
             ->orderBy($this->sortField, $this->sortDirection)
             ->paginate(10);
 
-        // Instituciones disponibles
         $institutions = $this->getAvailableInstitutions($currentUser);
-
-        // Usuarios disponibles para el modal de miembros
         $availableUsers = $this->getAvailableUsers($currentUser);
+        $advisors = $this->getAvailableAdvisors($currentUser);
 
         return view('livewire.admin.group-management', [
             'groups' => $groups,
             'totalGroups' => $this->getTotalGroups($currentUser),
             'institutions' => $institutions,
             'availableUsers' => $availableUsers,
+            'advisors' => $advisors,
         ]);
     }
 
@@ -327,6 +342,34 @@ class GroupManagement extends Component
             : Institution::where('id', $currentUser->institution_id)
                 ->where('active', true)
                 ->get();
+    }
+
+    /**
+     * Obtiene orientadores disponibles según el contexto
+     */
+    private function getAvailableAdvisors(User $currentUser): Collection
+    {
+        // Si no está en el modal, no cargar orientadores
+        if (!$this->isOpen) {
+            return collect();
+        }
+
+        // Si es orientador, no necesita selector
+        if ($currentUser->role_id === 2) {
+            return collect();
+        }
+
+        // Si es admin sin institución seleccionada, no mostrar orientadores
+        if (!$this->institution_id) {
+            return collect();
+        }
+
+        // Admin: Obtener orientadores de la institución seleccionada
+        return User::where('role_id', 2)
+            ->where('institution_id', $this->institution_id)
+            ->where('active', true)
+            ->orderBy('first_name')
+            ->get();
     }
 
     private function getTotalGroups(User $currentUser): int
@@ -371,6 +414,7 @@ class GroupManagement extends Component
         $this->name = '';
         $this->description = '';
         $this->institution_id = null;
+        $this->creator_id = null;
         $this->active = 1;
         $this->resetValidation();
     }
