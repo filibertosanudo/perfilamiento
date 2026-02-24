@@ -251,4 +251,12 @@ class User extends Authenticatable
             ->where('id', '!=', session()->getId())
             ->delete();
     }
+
+    /**
+     * Respuestas de tests del usuario
+     */
+    public function testResponses(): HasMany
+    {
+        return $this->hasMany(TestResponse::class);
+    }
 }

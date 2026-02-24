@@ -60,11 +60,6 @@ Route::middleware([
             return view('orientador.users');
         })->name('users');
 
-        // Asignar Tests (TODO)
-        // Route::get('/asignar-tests', function () {
-        //     return view('orientador.assign-tests');
-        // })->name('asignar-tests');
-
         // Resultados (TODO)
         // Route::get('/resultados', function () {
         //     return view('orientador.results');
@@ -78,32 +73,34 @@ Route::middleware([
 
     // RUTAS SOLO PARA USUARIO (role_id = 3)
 
-    Route::middleware(['role:user'])->prefix('usuario')->name('usuario.')->group(function () {
+    Route::middleware(['role:user'])->group(function () {
         
-        // Mis Tests (TODO)
-        // Route::get('/mis-tests', function () {
-        //     return view('usuario.my-tests');
-        // })->name('mis-tests');
+        // Responder Tests
+        Route::get('/tests/responder/{assignmentId}', function ($assignmentId) {
+            return view('tests.take', ['assignmentId' => $assignmentId]);
+        })->name('tests.take');
 
-        // Mis Resultados (TODO)
-        // Route::get('/mis-resultados', function () {
-        //     return view('usuario.my-results');
-        // })->name('mis-resultados');
+        // Mis Resultados
+        Route::get('/mis-resultados', function () {
+            return view('results.index');
+        })->name('results.index');
 
-        // Mi Perfil (TODO - o usar el /profile global)
-        // Route::get('/perfil', function () {
-        //     return view('usuario.profile');
-        // })->name('perfil');
+        // Ver Resultado Específico
+        Route::get('/resultados/{responseId}', function ($responseId) {
+            return view('results.show', ['responseId' => $responseId]);
+        })->name('results.show');
     });
 
     // RUTAS COMPARTIDAS ADMIN + ORIENTADOR
 
     Route::middleware(['role:admin,advisor'])->group(function () {
 
+        // Gestión de Grupos
         Route::get('/grupos', function () {
             return view('grupos.index');
         })->name('grupos.index');
 
+        // Asignar Tests
         Route::get('/tests/asignar', function () {
             return view('tests.assignments');
         })->name('tests.assignments');

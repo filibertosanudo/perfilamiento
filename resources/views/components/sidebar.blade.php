@@ -30,7 +30,7 @@
                     ['id' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'dashboard', 'route' => 'dashboard'],
                     ['id' => 'usuarios', 'label' => 'Gestión de Usuarios', 'icon' => 'users', 'route' => 'admin.users'],
                     ['id' => 'grupos', 'label' => 'Gestión de Grupos', 'icon' => 'groups', 'route' => 'grupos.index'],
-                    ['id' => 'tests', 'label' => 'Asignar Tests', 'icon' => 'clipboard', 'route' => 'tests.assignments'], // ← NUEVO
+                    ['id' => 'tests', 'label' => 'Asignar Tests', 'icon' => 'clipboard', 'route' => 'tests.assignments'],
                     ['id' => 'instituciones', 'label' => 'Instituciones', 'icon' => 'user-cog', 'route' => 'admin.instituciones'],
                     ['id' => 'reportes', 'label' => 'Reportes Generales', 'icon' => 'chart', 'route' => 'admin.reportes'],
                     ['id' => 'configuracion', 'label' => 'Configuración', 'icon' => 'settings', 'route' => 'admin.configuracion'],
@@ -40,16 +40,15 @@
                     ['id' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'dashboard', 'route' => 'dashboard'],
                     ['id' => 'grupos', 'label' => 'Mis Grupos', 'icon' => 'groups', 'route' => 'grupos.index'],
                     ['id' => 'usuarios', 'label' => 'Mis Usuarios', 'icon' => 'users', 'route' => 'orientador.users'],
-                    ['id' => 'tests', 'label' => 'Asignar Tests', 'icon' => 'clipboard', 'route' => 'tests.assignments'], // ← NUEVO
+                    ['id' => 'tests', 'label' => 'Asignar Tests', 'icon' => 'clipboard', 'route' => 'tests.assignments'],
                     ['id' => 'resultados', 'label' => 'Resultados', 'icon' => 'file-text', 'route' => 'orientador.resultados'],
                     ['id' => 'estadisticas', 'label' => 'Estadísticas', 'icon' => 'chart', 'route' => 'orientador.estadisticas'],
                 ];
             } else { // Usuario
                 $menuItems = [
                     ['id' => 'dashboard', 'label' => 'Mi Dashboard', 'icon' => 'dashboard', 'route' => 'dashboard'],
-                    ['id' => 'mis-tests', 'label' => 'Mis Tests', 'icon' => 'clipboard', 'route' => 'usuario.mis-tests'],
-                    ['id' => 'mis-resultados', 'label' => 'Mis Resultados', 'icon' => 'file-text', 'route' => 'usuario.mis-resultados'],
-                    ['id' => 'perfil', 'label' => 'Mi Perfil', 'icon' => 'user', 'route' => 'usuario.perfil'],
+                    ['id' => 'mis-resultados', 'label' => 'Mis Resultados', 'icon' => 'file-text', 'route' => 'results.index'],
+                    ['id' => 'perfil', 'label' => 'Mi Perfil', 'icon' => 'user', 'route' => 'profile.show'],
                 ];
             }
         @endphp
