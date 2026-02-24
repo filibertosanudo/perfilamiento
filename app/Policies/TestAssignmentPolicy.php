@@ -58,4 +58,24 @@ class TestAssignmentPolicy
 
         return false;
     }
+
+    /**
+     * Permitir al usuario responder el test
+     */
+    public function take(User $user, TestAssignment $assignment): bool
+    {
+        // Verificar que la asignación está activa
+        if (!$assignment->active) {
+            return false;
+        }
+
+        // Verificar que no esté vencida
+        if ($assignment->is_expired) {
+            return false;
+        }
+
+        // Verificar que el usuario es el destinatario
+        $affectedUsers = $assignment->affected_users->pluck('id');
+        return $affectedUsers->contains($user->id);
+    }
 }

@@ -16,16 +16,18 @@
             {{-- Lógica de selección de Dashboard --}}
             @switch(Auth::user()->role_id)
                 @case(1)
-                    {{-- Si es Admin, cargamos su vista parcial --}}
+                    {{-- Dashboard de Administrador --}}
                     @include('dashboards._admin')
                     @break
 
                 @case(2)
+                    {{-- Dashboard de Orientador --}}
                     @include('dashboards._advisor')
                     @break
 
                 @default
-                    @include('dashboards._user')
+                    {{-- Dashboard de Usuario --}}
+                    @livewire('user.user-dashboard')
             @endswitch
 
         </div>

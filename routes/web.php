@@ -78,8 +78,13 @@ Route::middleware([
 
     // RUTAS SOLO PARA USUARIO (role_id = 3)
 
-    Route::middleware(['role:user'])->prefix('usuario')->name('usuario.')->group(function () {
+    Route::middleware(['role:user'])->group(function () {
         
+        // Responder Tests
+        Route::get('/tests/responder/{assignmentId}', function ($assignmentId) {
+            return view('tests.take', ['assignmentId' => $assignmentId]);
+        })->name('tests.take');
+
         // Mis Tests (TODO)
         // Route::get('/mis-tests', function () {
         //     return view('usuario.my-tests');
@@ -89,21 +94,18 @@ Route::middleware([
         // Route::get('/mis-resultados', function () {
         //     return view('usuario.my-results');
         // })->name('mis-resultados');
-
-        // Mi Perfil (TODO - o usar el /profile global)
-        // Route::get('/perfil', function () {
-        //     return view('usuario.profile');
-        // })->name('perfil');
     });
 
     // RUTAS COMPARTIDAS ADMIN + ORIENTADOR
 
     Route::middleware(['role:admin,advisor'])->group(function () {
 
+        // Gestión de Grupos
         Route::get('/grupos', function () {
             return view('grupos.index');
         })->name('grupos.index');
 
+        // Asignar Tests
         Route::get('/tests/asignar', function () {
             return view('tests.assignments');
         })->name('tests.assignments');
