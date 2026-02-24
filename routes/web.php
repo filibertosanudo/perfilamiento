@@ -99,15 +99,14 @@ Route::middleware([
     // RUTAS COMPARTIDAS ADMIN + ORIENTADOR
 
     Route::middleware(['role:admin,advisor'])->group(function () {
-        
-        // Tests (TODO)
-        // Route::get('/tests', function () {
-        //     return view('shared.tests');
-        // })->name('tests.index');
 
         Route::get('/grupos', function () {
             return view('grupos.index');
         })->name('grupos.index');
+
+        Route::get('/tests/asignar', function () {
+            return view('tests.assignments');
+        })->name('tests.assignments');
     });
 });
 

@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Question extends Model
 {
+    public $timestamps = false;
+
     protected $fillable = [
         'test_id',
         'text',
@@ -15,13 +17,31 @@ class Question extends Model
         'answer_type',
     ];
 
+    protected $casts = [
+        'order' => 'integer',
+    ];
+
+    /**
+     * Test al que pertenece
+     */
     public function test(): BelongsTo
     {
         return $this->belongsTo(Test::class);
     }
 
+    /**
+     * Opciones de respuesta
+     */
     public function answerOptions(): HasMany
     {
-        return $this->hasMany(AnswerOption::class);
+        return $this->hasMany(AnswerOption::class)->orderBy('order');
+    }
+
+    /**
+     * Detalles de respuestas de usuarios
+     */
+    public function responseDetails(): HasMany
+    {
+        return $this->hasMany(ResponseDetail::class);
     }
 }

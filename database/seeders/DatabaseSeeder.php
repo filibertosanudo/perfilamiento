@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             InstitutionSeeder::class,
             UserSeeder::class,
             GroupSeeder::class,
+            TestSeeder::class,
         ]);
     }
 }
