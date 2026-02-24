@@ -60,11 +60,6 @@ Route::middleware([
             return view('orientador.users');
         })->name('users');
 
-        // Asignar Tests (TODO)
-        // Route::get('/asignar-tests', function () {
-        //     return view('orientador.assign-tests');
-        // })->name('asignar-tests');
-
         // Resultados (TODO)
         // Route::get('/resultados', function () {
         //     return view('orientador.results');
@@ -85,15 +80,15 @@ Route::middleware([
             return view('tests.take', ['assignmentId' => $assignmentId]);
         })->name('tests.take');
 
-        // Mis Tests (TODO)
-        // Route::get('/mis-tests', function () {
-        //     return view('usuario.my-tests');
-        // })->name('mis-tests');
+        // Mis Resultados
+        Route::get('/mis-resultados', function () {
+            return view('results.index');
+        })->name('results.index');
 
-        // Mis Resultados (TODO)
-        // Route::get('/mis-resultados', function () {
-        //     return view('usuario.my-results');
-        // })->name('mis-resultados');
+        // Ver Resultado Específico
+        Route::get('/resultados/{responseId}', function ($responseId) {
+            return view('results.show', ['responseId' => $responseId]);
+        })->name('results.show');
     });
 
     // RUTAS COMPARTIDAS ADMIN + ORIENTADOR

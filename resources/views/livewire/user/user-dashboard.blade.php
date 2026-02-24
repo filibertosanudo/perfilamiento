@@ -179,7 +179,7 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div class="p-6 border-b border-gray-200 flex justify-between items-center">
                 <h3 class="text-lg font-bold text-gray-900">Tests Completados Recientes</h3>
-                <a href="#" class="text-sm text-gray-600 hover:text-gray-900 border border-gray-300 px-3 py-1 rounded-md transition-colors bg-white">
+                <a href="{{ route('results.index') }}" class="text-sm text-gray-600 hover:text-gray-900 border border-gray-300 px-3 py-1 rounded-md transition-colors bg-white">
                     Ver Todos
                 </a>
             </div>
@@ -193,10 +193,17 @@
                             'severa' => 'red',
                             'normal' => 'emerald',
                             'bajo' => 'amber',
-                            'alto' => 'emerald',
+                            'alta' => 'emerald',
+                            'baja' => 'amber',
                         ];
                         $category = strtolower($response->result_category ?? 'normal');
-                        $color = $categoryColors[$category] ?? 'gray';
+                        $color = 'gray';
+                        foreach ($categoryColors as $key => $badgeColor) {
+                            if (str_contains($category, $key)) {
+                                $color = $badgeColor;
+                                break;
+                            }
+                        }
                     @endphp
                     <div class="flex items-center justify-between p-4 bg-{{ $color }}-50 rounded-lg border border-{{ $color }}-100">
                         <div class="flex items-center gap-3">
@@ -214,7 +221,7 @@
                             <span class="text-sm font-medium text-{{ $color }}-700 mr-3">
                                 {{ ucfirst($response->result_category ?? 'Normal') }}
                             </span>
-                            <a href="#" class="text-sm text-gray-600 hover:text-gray-900 hover:underline">
+                            <a href="{{ route('results.show', $response->id) }}" class="text-sm text-gray-600 hover:text-gray-900 hover:underline">
                                 Ver Resultados
                             </a>
                         </div>
