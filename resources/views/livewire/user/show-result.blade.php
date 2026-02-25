@@ -67,10 +67,30 @@
                 </div>
                 <div class="text-center p-6 bg-gray-50 rounded-lg">
                     <p class="text-sm text-gray-500 mb-2">Tiempo Utilizado</p>
-                    <p class="text-4xl font-bold text-gray-900">
-                        {{ $response->started_at->diffInMinutes($response->finished_at) }}
+                    @php
+                        $totalSeconds = $response->started_at->diffInSeconds($response->finished_at);
+                        $minutes = floor($totalSeconds / 60);
+                        $seconds = $totalSeconds % 60;
+                    @endphp
+                    <div class="text-4xl font-bold text-gray-900">
+                        @if($totalSeconds < 60)
+                            < 1m
+                        @else
+                            {{ $minutes }}m
+                            @if($seconds > 0)
+                                <span class="text-3xl text-gray-600"> {{ $seconds }}s</span>
+                            @endif
+                        @endif
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">
+                        @if($totalSeconds < 60)
+                            Menos de un minuto
+                        @elseif($seconds > 0)
+                            {{ $minutes }} {{ $minutes == 1 ? 'minuto' : 'minutos' }} y {{ $seconds }} {{ $seconds == 1 ? 'segundo' : 'segundos' }}
+                        @else
+                            {{ $minutes }} {{ $minutes == 1 ? 'minuto' : 'minutos' }}
+                        @endif
                     </p>
-                    <p class="text-xs text-gray-500 mt-1">minutos</p>
                 </div>
             </div>
 

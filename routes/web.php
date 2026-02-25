@@ -104,6 +104,16 @@ Route::middleware([
         Route::get('/tests/asignar', function () {
             return view('tests.assignments');
         })->name('tests.assignments');
+
+        // Resultados
+        Route::get('/resultados', function () {
+            return view('advisor.results');
+        })->name('advisor.results');
+
+        // Ver Resultado Específico
+        Route::get('/resultados/{responseId}/ver', function ($responseId) {
+            return view('advisor.results-show', ['responseId' => $responseId]);
+        })->name('advisor.results.show');
     });
 });
 

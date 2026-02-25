@@ -41,7 +41,7 @@
                     ['id' => 'grupos', 'label' => 'Mis Grupos', 'icon' => 'groups', 'route' => 'grupos.index'],
                     ['id' => 'usuarios', 'label' => 'Mis Usuarios', 'icon' => 'users', 'route' => 'orientador.users'],
                     ['id' => 'tests', 'label' => 'Asignar Tests', 'icon' => 'clipboard', 'route' => 'tests.assignments'],
-                    ['id' => 'resultados', 'label' => 'Resultados', 'icon' => 'file-text', 'route' => 'orientador.resultados'],
+                    ['id' => 'resultados', 'label' => 'Resultados', 'icon' => 'file-text', 'route' => 'advisor.results'],
                     ['id' => 'estadisticas', 'label' => 'Estadísticas', 'icon' => 'chart', 'route' => 'orientador.estadisticas'],
                 ];
             } else { // Usuario
