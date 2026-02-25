@@ -39,10 +39,10 @@ class AdvisorResults extends Component
 
     public function render()
     {
-        $advisor = auth()->user();
+        $currentUser = auth()->user();
 
-        // Obtener IDs de mis usuarios
-        $myUserIds = $this->getMyUserIds($advisor);
+        // Obtener IDs de usuarios según el rol
+        $myUserIds = $this->getMyUserIds($currentUser);
 
         // Query de resultados
         $query = TestResponse::whereIn('user_id', $myUserIds)
@@ -52,8 +52,8 @@ class AdvisorResults extends Component
                 $q->where(function ($q) {
                     $q->whereHas('user', function ($q) {
                         $q->where('first_name', 'like', "%{$this->search}%")
-                          ->orWhere('last_name', 'like', "%{$this->search}%")
-                          ->orWhere('email', 'like', "%{$this->search}%");
+                        ->orWhere('last_name', 'like', "%{$this->search}%")
+                        ->orWhere('email', 'like', "%{$this->search}%");
                     })
                     ->orWhereHas('assignment.test', function ($q) {
                         $q->where('name', 'like', "%{$this->search}%");
@@ -72,6 +72,7 @@ class AdvisorResults extends Component
 
         // Obtener datos para filtros
         $myUsers = User::whereIn('id', $myUserIds)->orderBy('first_name')->get();
+        
         $availableTests = Test::whereHas('assignments.responses', function ($q) use ($myUserIds) {
             $q->whereIn('user_id', $myUserIds)->where('completed', true);
         })->orderBy('name')->get();
@@ -98,6 +99,15 @@ class AdvisorResults extends Component
 
     private function getMyUserIds($advisor): array
     {
+        // Si es admin, devolver todos los usuarios
+        if ($advisor->role_id === 1) {
+            return User::where('role_id', 3)
+                ->where('active', true)
+                ->pluck('id')
+                ->toArray();
+        }
+
+        // Si es orientador, solo sus usuarios
         return User::whereHas('groups', function ($q) use ($advisor) {
             $q->where('creator_id', $advisor->id);
         })

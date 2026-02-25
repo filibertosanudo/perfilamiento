@@ -26,19 +26,38 @@ class ShowUserResult extends Component
         $this->response = TestResponse::with([
             'assignment.test.questions.answerOptions',
             'assignment.assignedBy',
-            'user',
+            'user.institution',
+            'user.groups',
             'details.question',
             'details.answerOption'
         ])->findOrFail($responseId);
 
-        // Verificar que el orientador tiene acceso a este usuario
-        $advisor = auth()->user();
-        $userBelongsToAdvisor = $this->response->user->groups()
-            ->where('creator_id', $advisor->id)
-            ->exists();
+        // Verificar permisos
+        $currentUser = auth()->user();
+        
+        // Admin puede ver todo - no necesita verificación adicional
+        if ($currentUser->role_id === 1) {
+            // Admin tiene acceso total, continuar sin restricciones
+        } 
+        // Orientador solo ve resultados de sus usuarios
+        elseif ($currentUser->role_id === 2) {
+            $userBelongsToAdvisor = $this->response->user->groups()
+                ->where('creator_id', $currentUser->id)
+                ->exists();
 
-        if (!$userBelongsToAdvisor) {
-            abort(403, 'No tienes permiso para ver este resultado.');
+            if (!$userBelongsToAdvisor) {
+                abort(403, 'No tienes permiso para ver este resultado.');
+            }
+        }
+        // Usuario normal solo ve sus propios resultados
+        elseif ($currentUser->role_id === 3) {
+            if ($this->response->user_id !== $currentUser->id) {
+                abort(403, 'No tienes permiso para ver este resultado.');
+            }
+        }
+        // Otros roles no tienen acceso
+        else {
+            abort(403, 'No tienes permiso para acceder a esta página.');
         }
 
         $this->details = $this->response->details;
@@ -46,7 +65,6 @@ class ShowUserResult extends Component
         $this->loadUserHistory();
         $this->recommendation = $this->generateRecommendation();
         $this->trend = $this->calculateTrend();
-        $this->timeUsed = $this->formatTimeUsed();
     }
 
     /**

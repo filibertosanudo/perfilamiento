@@ -22,19 +22,38 @@ class ShowResult extends Component
         $this->response = TestResponse::with([
             'assignment.test.questions.answerOptions',
             'assignment.assignedBy',
+            'user',
             'details.question',
             'details.answerOption'
         ])->findOrFail($responseId);
 
-        // Verificar que el usuario tiene acceso
-        if ($this->response->user_id !== auth()->id()) {
+        // Verificar permisos
+        $currentUser = auth()->user();
+        
+        // Admin puede ver todo
+        if ($currentUser->role_id === 1) {
+            // Admin tiene acceso total
+        } 
+        // Orientador solo ve sus usuarios
+        elseif ($currentUser->role_id === 2) {
+            $userBelongsToAdvisor = $this->response->user->groups()
+                ->where('creator_id', $currentUser->id)
+                ->exists();
+
+            if (!$userBelongsToAdvisor) {
+                abort(403, 'No tienes permiso para ver este resultado.');
+            }
+        }
+        // Otros roles no tienen acceso
+        else {
             abort(403, 'No tienes permiso para ver este resultado.');
         }
 
         $this->details = $this->response->details;
         $this->calculateScoreBySection();
-        $this->canRetake = $this->checkCanRetake();
+        $this->loadUserHistory();
         $this->recommendation = $this->generateRecommendation();
+        $this->trend = $this->calculateTrend();
     }
 
     /**

@@ -34,7 +34,13 @@
                         <span class="text-gray-700">{{ $response->user->institution->name }}</span>
                     </div>
                     @php
-                        $userGroups = $response->user->groups()->where('creator_id', auth()->id())->get();
+                        // Si es admin, mostrar todos los grupos del usuario
+                        // Si es orientador, solo mostrar sus grupos
+                        if (auth()->user()->role_id === 1) {
+                            $userGroups = $response->user->groups;
+                        } else {
+                            $userGroups = $response->user->groups()->where('creator_id', auth()->id())->get();
+                        }
                     @endphp
                     @if($userGroups->isNotEmpty())
                         <div class="flex items-center gap-2">

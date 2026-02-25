@@ -1,7 +1,11 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Resultados de Tests
+            @if(auth()->user()->role_id === 1)
+                Resultados de Tests (Todos)
+            @else
+                Resultados de Tests
+            @endif
         </h2>
     </x-slot>
 
