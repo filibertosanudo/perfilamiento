@@ -48,7 +48,7 @@
                 $menuItems = [
                     ['id' => 'dashboard', 'label' => 'Mi Dashboard', 'icon' => 'dashboard', 'route' => 'dashboard'],
                     ['id' => 'mis-resultados', 'label' => 'Mis Resultados', 'icon' => 'file-text', 'route' => 'results.index'],
-                    ['id' => 'perfil', 'label' => 'Mi Perfil', 'icon' => 'user', 'route' => 'profile.show'],
+                    // ['id' => 'perfil', 'label' => 'Mi Perfil', 'icon' => 'user', 'route' => 'profile.show'],
                 ];
             }
         @endphp

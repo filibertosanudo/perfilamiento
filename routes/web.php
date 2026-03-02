@@ -60,6 +60,11 @@ Route::middleware([
             return view('orientador.users');
         })->name('users');
 
+        // Estadísticas
+        Route::get('/estadisticas', function () {
+            return view('orientador.statistics');
+        })->name('estadisticas');
+
         // Resultados (TODO)
         // Route::get('/resultados', function () {
         //     return view('orientador.results');
