@@ -2,9 +2,19 @@
 
     {{-- Header --}}
     <div>
-        <h1 class="text-3xl font-bold text-gray-900">Resultados de Tests</h1>
+        <h1 class="text-3xl font-bold text-gray-900">
+            @if(auth()->user()->role_id === 1)
+                Resultados de Tests - Vista Global
+            @else
+                Resultados de Tests
+            @endif
+        </h1>
         <p class="mt-1 text-sm text-gray-500">
-            Resultados de todos los tests completados por tus usuarios
+            @if(auth()->user()->role_id === 1)
+                Todos los resultados de tests completados en el sistema
+            @else
+                Resultados de todos los tests completados por tus usuarios
+            @endif
         </p>
     </div>
 

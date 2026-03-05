@@ -5,7 +5,7 @@ use App\Livewire\Auth\AcceptInvitation;
 use App\Http\Controllers\Auth\CustomLoginController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 
 Route::middleware([
@@ -59,6 +59,11 @@ Route::middleware([
         Route::get('/usuarios', function () {
             return view('orientador.users');
         })->name('users');
+
+        // Estadísticas
+        Route::get('/estadisticas', function () {
+            return view('orientador.statistics');
+        })->name('estadisticas');
 
         // Resultados (TODO)
         // Route::get('/resultados', function () {

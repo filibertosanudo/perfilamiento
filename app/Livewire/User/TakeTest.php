@@ -197,6 +197,62 @@ class TakeTest extends Component
             'category' => $resultCategory,
         ]);
 
+        // ENVIAR NOTIFICACIONES
+        $currentUser = auth()->user();
+        $userName = $currentUser->first_name . ' ' . $currentUser->last_name;
+        $testName = $this->assignment->test->name;
+
+        // Notificar al orientador que asignó el test
+        if ($this->assignment->assignedBy) {
+            NotificationHelper::testCompleted(
+                $this->assignment->assignedBy,
+                $userName,
+                $testName,
+                $this->response->id
+            );
+        }
+
+        // Si el resultado es severo o moderado, enviar alertas
+        $categoryLower = strtolower($resultCategory);
+        $isSevere = str_contains($categoryLower, 'severa') || str_contains($categoryLower, 'moderada');
+
+        if ($isSevere) {
+            // Notificar al orientador
+            if ($this->assignment->assignedBy) {
+                NotificationHelper::resultSevere(
+                    $this->assignment->assignedBy,
+                    $userName,
+                    $testName,
+                    $resultCategory,
+                    $this->response->id
+                );
+            }
+
+            // Notificar a todos los admins activos
+            $admins = User::where('role_id', 1)
+                ->where('active', true)
+                ->get();
+
+            foreach ($admins as $admin) {
+                NotificationHelper::resultSevere(
+                    $admin,
+                    $userName,
+                    $testName,
+                    $resultCategory,
+                    $this->response->id
+                );
+            }
+
+            \Log::warning('Resultado severo detectado - Notificaciones de alerta enviadas', [
+                'user_id' => auth()->id(),
+                'test_id' => $this->assignment->test_id,
+                'response_id' => $this->response->id,
+                'category' => $resultCategory,
+                'score' => $totalScore,
+                'notifications_sent' => 1 + $admins->count(),
+            ]);
+        }
+
         session()->flash('test_completed', true);
     }
 

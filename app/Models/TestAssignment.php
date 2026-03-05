@@ -97,7 +97,7 @@ class TestAssignment extends Model
     public function getAffectedUsersAttribute()
     {
         if ($this->user_id) {
-            return User::where('id', $this->user_id)->get();
+            return collect([$this->user]);
         }
 
         if ($this->group_id) {
@@ -107,6 +107,7 @@ class TestAssignment extends Model
         if ($this->institution_id) {
             return User::where('institution_id', $this->institution_id)
                 ->where('role_id', 3)
+                ->where('active', true)
                 ->get();
         }
 
