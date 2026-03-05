@@ -13,6 +13,7 @@ use App\Models\Institution;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use App\Helpers\NotificationHelper;
 
 class TestAssignmentManagement extends Component
 {
@@ -56,7 +57,14 @@ class TestAssignmentManagement extends Component
     {
         $this->user_id = null;
         $this->group_id = null;
-        $this->institution_id = null;
+        
+        $user = auth()->user();
+
+        if ($this->assignment_type === 'institution' && $user->role_id === 2) {
+            $this->institution_id = $user->institution_id;
+        } else {
+            $this->institution_id = null;
+        }
     }
 
     // Ordenamiento
@@ -76,6 +84,13 @@ class TestAssignmentManagement extends Component
     public function openModal(): void
     {
         $this->isOpen = true;
+
+        $user = auth()->user();
+
+        if ($this->assignment_type === 'institution' && $user->role_id === 2) {
+            $this->institution_id = $user->institution_id;
+        }
+
         $this->dispatch('modal-opened');
     }
 
@@ -187,14 +202,42 @@ class TestAssignmentManagement extends Component
         );
 
         if ($isNew) {
-            \Log::info('Test asignado', [
+            $test = Test::find($this->test_id);
+            $dueDate = \Carbon\Carbon::parse($this->due_date);
+
+            // Obtener usuarios afectados
+            $affectedUsers = collect();
+
+            if ($this->assignment_type === 'individual' && $this->user_id) {
+                $affectedUsers->push(User::find($this->user_id));
+            } elseif ($this->assignment_type === 'group' && $this->group_id) {
+                $group = Group::with('users')->find($this->group_id);
+                $affectedUsers = $group->users;
+            } elseif ($this->assignment_type === 'institution' && $this->institution_id) {
+                $institution = Institution::with('users')->find($this->institution_id);
+                $affectedUsers = $institution->users->where('role_id', 3);
+            }
+
+            // Enviar notificación a cada usuario
+            foreach ($affectedUsers as $user) {
+                NotificationHelper::testAssigned(
+                    $user,
+                    $test->name,
+                    $test->id,
+                    $dueDate
+                );
+            }
+
+            \Log::info('Test asignado con notificaciones', [
                 'assignment_id' => $assignment->id,
                 'test_id' => $assignment->test_id,
                 'type' => $this->assignment_type,
                 'assigned_by' => auth()->id(),
-                'affected_users' => $assignment->affected_users->count(),
+                'affected_users' => $affectedUsers->count(),
+                'notifications_sent' => $affectedUsers->count(),
             ]);
-            $message = 'Test asignado correctamente a ' . $assignment->affected_users->count() . ' usuario(s).';
+
+            $message = 'Test asignado correctamente a ' . $affectedUsers->count() . ' usuario(s). Notificaciones enviadas.';
         } else {
             \Log::info('Asignación de test actualizada', [
                 'assignment_id' => $assignment->id,

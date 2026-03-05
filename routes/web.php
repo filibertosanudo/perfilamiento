@@ -5,7 +5,7 @@ use App\Livewire\Auth\AcceptInvitation;
 use App\Http\Controllers\Auth\CustomLoginController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 
 Route::middleware([

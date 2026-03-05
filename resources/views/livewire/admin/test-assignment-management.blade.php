@@ -536,10 +536,14 @@
                             <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">
                                 Institución <span class="text-red-500">*</span>
                             </label>
-                            <select wire:model.blur="institution_id"
+                            <select wire:model.live="institution_id"
                                 {{ $isViewMode || auth()->user()->role_id === 2 ? 'disabled' : '' }}
                                 class="block w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed">
-                                <option value="">Seleccionar institución...</option>
+                                
+                                @if(auth()->user()->role_id !== 2)
+                                    <option value="">Seleccionar institución...</option>
+                                @endif
+                                
                                 @foreach($institutions as $institution)
                                     <option value="{{ $institution->id }}">
                                         {{ $institution->name }}
