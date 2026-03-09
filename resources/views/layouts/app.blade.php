@@ -28,7 +28,7 @@
 
             <div class="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
                 
-                <x-header :title="$title ?? 'Panel de Control'" />
+                <x-header :title="$header ?? 'Panel de Control'" />
 
                 <main class="p-6">
                     {{ $slot }}
