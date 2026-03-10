@@ -7,7 +7,9 @@ use App\Models\User;
 use App\Models\Group;
 use App\Models\Test;
 use App\Models\TestResponse;
+use App\Models\TestAssignment;
 use Illuminate\Support\Collection;
+use Carbon\Carbon;
 
 class AdvisorStatistics extends Component
 {
@@ -26,7 +28,7 @@ class AdvisorStatistics extends Component
         // Distribución de niveles
         $levelDistribution = $this->getLevelDistribution($myUserIds);
 
-        // Tendencias mensuales (últimos 6 meses)
+        // Tendencias mensuales (basadas en el período seleccionado)
         $monthlyTrends = $this->getMonthlyTrends($myUserIds);
 
         // Comparativa por grupo
@@ -55,28 +57,43 @@ class AdvisorStatistics extends Component
         ->toArray();
     }
 
+    private function getDateRange(): array
+    {
+        $endDate = now();
+        
+        $startDate = match($this->period) {
+            'month' => now()->subMonth(),
+            'quarter' => now()->subMonths(3),
+            'semester' => now()->subMonths(6),
+            'year' => now()->subYear(),
+            default => now()->subMonth(),
+        };
+
+        return [$startDate, $endDate];
+    }
+
     private function getTestStatistics($userIds): Collection
     {
+        [$startDate, $endDate] = $this->getDateRange();
+
         return Test::where('active', true)
-            ->withCount([
-                'assignments as total_completed' => function ($q) use ($userIds) {
-                    $q->whereHas('responses', function ($q) use ($userIds) {
-                        $q->whereIn('user_id', $userIds)->where('completed', true);
-                    });
-                }
-            ])
             ->get()
-            ->map(function ($test) use ($userIds) {
+            ->map(function ($test) use ($userIds, $startDate, $endDate) {
                 $responses = TestResponse::whereIn('user_id', $userIds)
                     ->whereHas('assignment', function ($q) use ($test) {
                         $q->where('test_id', $test->id);
                     })
                     ->where('completed', true)
+                    ->whereBetween('finished_at', [$startDate, $endDate])
                     ->get();
+
+                if ($responses->isEmpty()) {
+                    return null;
+                }
 
                 $avgScore = $responses->avg('numeric_result') ?? 0;
 
-                // Categorizar en bajo, medio, alto según el puntaje
+                // Categorizar en bajo, medio, alto según el puntaje máximo del test
                 $maxScore = $test->max_score > 0 ? $test->max_score : 100;
                 $distribution = [
                     'bajo' => $responses->filter(fn($r) => ($r->numeric_result / $maxScore) * 100 <= 33)->count(),
@@ -91,22 +108,39 @@ class AdvisorStatistics extends Component
                     'distribution' => $distribution,
                 ];
             })
-            ->filter(fn($stat) => $stat['completed'] > 0);
+            ->filter();
     }
 
     private function getLevelDistribution($userIds): array
     {
-        $categories = ['mínima', 'leve', 'moderada', 'severa', 'normal', 'baja', 'alta'];
+        [$startDate, $endDate] = $this->getDateRange();
+        
+        // Mapeo de categorías específicas
+        $categoryMapping = [
+            'mínima' => ['mínima', 'Ansiedad mínima', 'Depresión mínima'],
+            'leve' => ['leve', 'Ansiedad leve', 'Depresión leve'],
+            'moderada' => ['moderada', 'moderadamente', 'Ansiedad moderada', 'Depresión moderada', 'Depresión moderadamente severa'],
+            'severa' => ['severa', 'Ansiedad severa', 'Depresión severa'],
+            'normal' => ['normal', 'Autoestima normal'],
+            'baja' => ['baja', 'Autoestima baja'],
+            'alta' => ['alta', 'Autoestima alta'],
+        ];
         
         $distribution = [];
-        foreach ($categories as $category) {
+        
+        foreach ($categoryMapping as $mainCategory => $variants) {
             $count = TestResponse::whereIn('user_id', $userIds)
                 ->where('completed', true)
-                ->where('result_category', 'like', "%{$category}%")
+                ->whereBetween('finished_at', [$startDate, $endDate])
+                ->where(function ($q) use ($variants) {
+                    foreach ($variants as $variant) {
+                        $q->orWhere('result_category', 'like', "%{$variant}%");
+                    }
+                })
                 ->count();
             
             if ($count > 0) {
-                $distribution[$category] = $count;
+                $distribution[$mainCategory] = $count;
             }
         }
 
@@ -115,14 +149,30 @@ class AdvisorStatistics extends Component
 
     private function getMonthlyTrends($userIds): array
     {
+        // Determinar número de meses según el período
+        $monthsCount = match($this->period) {
+            'month' => 4,      // 4 semanas
+            'quarter' => 3,    // 3 meses
+            'semester' => 6,   // 6 meses
+            'year' => 12,      // 12 meses
+            default => 6,
+        };
+
         $months = [];
         $completed = [];
         $pending = [];
 
-        for ($i = 5; $i >= 0; $i--) {
+        for ($i = $monthsCount - 1; $i >= 0; $i--) {
             $date = now()->subMonths($i);
-            $months[] = $date->format('M');
             
+            // Formato de etiqueta según período
+            if ($this->period === 'month') {
+                $months[] = 'S' . ceil($date->day / 7); // Semana
+            } else {
+                $months[] = $date->format('M'); // Mes abreviado
+            }
+            
+            // Completados en ese período
             $completedCount = TestResponse::whereIn('user_id', $userIds)
                 ->where('completed', true)
                 ->whereMonth('finished_at', $date->month)
@@ -131,14 +181,23 @@ class AdvisorStatistics extends Component
             
             $completed[] = $completedCount;
             
-            // Pendientes: asignados pero no completados en ese mes
-            $assignedInMonth = \DB::table('test_assignments')
+            // Pendientes: asignaciones activas de ese mes que NO han sido completadas
+            $assignedUserIds = TestAssignment::whereIn('user_id', $userIds)
                 ->whereMonth('assigned_at', $date->month)
                 ->whereYear('assigned_at', $date->year)
                 ->where('active', true)
-                ->count();
-            
-            $pending[] = max(0, $assignedInMonth - $completedCount);
+                ->pluck('user_id')
+                ->unique();
+
+            $completedUserIds = TestResponse::whereIn('user_id', $assignedUserIds)
+                ->where('completed', true)
+                ->whereMonth('finished_at', $date->month)
+                ->whereYear('finished_at', $date->year)
+                ->pluck('user_id')
+                ->unique();
+
+            $pendingCount = $assignedUserIds->diff($completedUserIds)->count();
+            $pending[] = $pendingCount;
         }
 
         return [
@@ -150,19 +209,23 @@ class AdvisorStatistics extends Component
 
     private function getGroupComparison($advisor): Collection
     {
+        [$startDate, $endDate] = $this->getDateRange();
+
         return Group::where('creator_id', $advisor->id)
             ->where('active', true)
             ->withCount('users')
             ->get()
-            ->map(function ($group) {
+            ->map(function ($group) use ($startDate, $endDate) {
                 $userIds = $group->users->pluck('id');
                 
                 $completedTests = TestResponse::whereIn('user_id', $userIds)
                     ->where('completed', true)
+                    ->whereBetween('finished_at', [$startDate, $endDate])
                     ->count();
                 
                 $avgScore = TestResponse::whereIn('user_id', $userIds)
                     ->where('completed', true)
+                    ->whereBetween('finished_at', [$startDate, $endDate])
                     ->avg('numeric_result') ?? 0;
 
                 return [
@@ -171,30 +234,45 @@ class AdvisorStatistics extends Component
                     'completed' => $completedTests,
                     'average' => round($avgScore, 1),
                 ];
-            });
+            })
+            ->filter(fn($g) => $g['users'] > 0);
     }
 
     private function getGeneralStats($userIds): array
     {
+        [$startDate, $endDate] = $this->getDateRange();
+
         $totalCompleted = TestResponse::whereIn('user_id', $userIds)
             ->where('completed', true)
+            ->whereBetween('finished_at', [$startDate, $endDate])
             ->count();
 
         $thisMonth = TestResponse::whereIn('user_id', $userIds)
             ->where('completed', true)
             ->whereMonth('finished_at', now()->month)
+            ->whereYear('finished_at', now()->year)
             ->count();
 
+        // Calcular tiempo promedio correctamente (solo respuestas con ambas fechas)
         $avgTime = TestResponse::whereIn('user_id', $userIds)
             ->where('completed', true)
+            ->whereBetween('finished_at', [$startDate, $endDate])
+            ->whereNotNull('started_at')
+            ->whereNotNull('finished_at')
             ->get()
+            ->filter(function($response) {
+                // Filtrar respuestas con tiempos razonables (menos de 2 horas)
+                $minutes = $response->started_at->diffInMinutes($response->finished_at);
+                return $minutes > 0 && $minutes < 120;
+            })
             ->avg(function ($response) {
                 return $response->started_at->diffInMinutes($response->finished_at);
             });
 
-        $totalAssignments = \DB::table('test_assignments')
-            ->where('assigned_by', auth()->id())
+        // Total de asignaciones activas del orientador en el período
+        $totalAssignments = TestAssignment::where('assigned_by', auth()->id())
             ->where('active', true)
+            ->whereBetween('assigned_at', [$startDate, $endDate])
             ->count();
 
         $completionRate = $totalAssignments > 0 

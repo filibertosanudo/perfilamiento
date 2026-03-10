@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Auth\AcceptInvitation;
 use App\Http\Controllers\Auth\CustomLoginController;
+use App\Http\Controllers\PdfController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -14,19 +15,25 @@ Route::middleware([
     'verified',
 ])->group(function () {
     
+    // ========================================
     // DASHBOARD - Todos los roles autenticados
+    // ========================================
 
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
 
+    // ========================================
     // PERFIL - Todos los roles autenticados
+    // ========================================
 
     Route::get('/profile', function () {
         return view('profile.show');
     })->name('profile.show');
 
+    // ========================================
     // RUTAS SOLO PARA ADMIN (role_id = 1)
+    // ========================================
 
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
         
@@ -49,9 +56,18 @@ Route::middleware([
         // Route::get('/configuracion', function () {
         //     return view('admin.settings');
         // })->name('configuracion');
+
+        // PDFs de Admin
+        Route::get('/pdf/dashboard', [PdfController::class, 'downloadAdminDashboard'])
+            ->name('pdf.dashboard');
+
+        Route::get('/pdf/user-history/{userId}', [PdfController::class, 'downloadUserHistory'])
+            ->name('pdf.user-history');
     });
 
+    // ========================================
     // RUTAS SOLO PARA ORIENTADOR (role_id = 2)
+    // ========================================
 
     Route::middleware(['role:advisor'])->prefix('orientador')->name('orientador.')->group(function () {
         
@@ -70,13 +86,20 @@ Route::middleware([
         //     return view('orientador.results');
         // })->name('resultados');
 
-        // Estadísticas (TODO)
-        // Route::get('/estadisticas', function () {
-        //     return view('orientador.statistics');
-        // })->name('estadisticas');
+        // PDFs de Orientador
+        Route::get('/pdf/estadisticas', [PdfController::class, 'downloadAdvisorStatistics'])
+            ->name('pdf.statistics');
+        
+        Route::get('/pdf/grupo/{groupId}', [PdfController::class, 'downloadGroupReport'])
+            ->name('pdf.group');
+        
+        Route::get('/pdf/usuario/{userId}', [PdfController::class, 'downloadUserHistory'])
+            ->name('pdf.user-history');
     });
 
+    // ========================================
     // RUTAS SOLO PARA USUARIO (role_id = 3)
+    // ========================================
 
     Route::middleware(['role:user'])->group(function () {
         
@@ -94,9 +117,21 @@ Route::middleware([
         Route::get('/resultados/{responseId}', function ($responseId) {
             return view('results.show', ['responseId' => $responseId]);
         })->name('results.show');
+
+        // PDFs para Usuarios
+        Route::get('/pdf/test-result/{responseId}', [PdfController::class, 'downloadTestResult'])
+            ->name('pdf.test-result');
+        
+        Route::get('/pdf/my-history', [PdfController::class, 'downloadUserHistory'])
+            ->name('pdf.user-history');
+
+        Route::get('/pdf/my-integral-report', [PdfController::class, 'downloadUserIntegralReport'])
+            ->name('pdf.user-integral');
     });
 
+    // ========================================
     // RUTAS COMPARTIDAS ADMIN + ORIENTADOR
+    // ========================================
 
     Route::middleware(['role:admin,advisor'])->group(function () {
 
@@ -122,7 +157,9 @@ Route::middleware([
     });
 });
 
+// ========================================
 // RUTAS PÚBLICAS (sin autenticación)
+// ========================================
 
 // Aceptar invitación (link firmado en email)
 Route::get('/invitation/accept/{token}', AcceptInvitation::class)

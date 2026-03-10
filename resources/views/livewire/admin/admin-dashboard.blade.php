@@ -1,9 +1,28 @@
 <div class="space-y-6">
 
     {{-- Header --}}
-    <div>
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">Panel de Administración</h1>
-        <p class="text-gray-500">Vista global del sistema de perfilamiento</p>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Dashboard Administrativo</h1>
+            <p class="text-gray-500">Visión global del sistema</p>
+        </div>
+        <div class="flex gap-3">
+            <select wire:model.live="period"
+                class="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-teal-500">
+                <option value="month">Último mes</option>
+                <option value="quarter">Último trimestre</option>
+                <option value="semester">Último semestre</option>
+                <option value="year">Último año</option>
+            </select>
+            
+            <a href="{{ route('admin.pdf.dashboard', ['period' => $period ?? 'month']) }}" 
+            class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg px-4 py-2 text-sm transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Exportar Dashboard
+            </a>
+        </div>
     </div>
 
     {{-- Stats Cards Principales --}}
