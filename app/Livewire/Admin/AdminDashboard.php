@@ -13,6 +13,8 @@ use Illuminate\Support\Collection;
 
 class AdminDashboard extends Component
 {
+    public $period = 'month';
+
     public function render()
     {
         // Estadísticas generales
@@ -48,6 +50,7 @@ class AdminDashboard extends Component
             'topAdvisors' => $topAdvisors,
             'concerningResults' => $concerningResults,
             'recentCompletions' => $recentCompletions,
+            'period' => $this->period,
         ]);
     }
 

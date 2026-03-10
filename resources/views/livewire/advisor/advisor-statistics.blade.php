@@ -14,18 +14,15 @@
                 <option value="semester">Último semestre</option>
                 <option value="year">Último año</option>
             </select>
-            <button class="inline-flex items-center gap-2 border border-gray-200 rounded-lg px-4 py-2 text-sm bg-white hover:bg-gray-50 transition-colors">
+            
+            {{-- Botón de Exportar PDF --}}
+            <a href="{{ route('orientador.pdf.statistics', ['period' => $period]) }}" 
+            class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg px-4 py-2 text-sm transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
-                Filtros
-            </button>
-            <button class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg px-4 py-2 text-sm transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                </svg>
-                Exportar
-            </button>
+                Exportar PDF
+            </a>
         </div>
     </div>
 
@@ -42,68 +39,70 @@
                     $groups = $groupComparison->take(4)->values();
                     if ($groups->isEmpty() || $groups->sum('users') == 0) {
                         $groups = collect([
-                            ['name' => 'Grupo A', 'users' => 47, 'completed' => 156],
-                            ['name' => 'Grupo B', 'users' => 23, 'completed' => 89],
-                            ['name' => 'Grupo C', 'users' => 34, 'completed' => 124],
-                            ['name' => 'Grupo D', 'users' => 28, 'completed' => 98],
+                            ['name' => 'Sin grupos', 'users' => 0, 'completed' => 0],
                         ]);
                     }
-                    $maxVal = max(array_merge($groups->pluck('users')->toArray(), $groups->pluck('completed')->toArray()));
-                    $maxVal = $maxVal < 10 ? 100 : $maxVal; // Mínimo 100 para escala
+                    $maxVal = max(1, max(array_merge($groups->pluck('users')->toArray(), $groups->pluck('completed')->toArray())));
                 @endphp
                 
-                <div style="height: 300px; position: relative;">
-                    <svg viewBox="0 0 500 340" style="width: 100%; height: 100%;">
-                        {{-- Grid lines & Y labels --}}
-                        @for($i = 0; $i <= 5; $i++)
-                            @php
-                                $val = ($maxVal / 5) * $i;
-                                $y = 300 - (60 * $i);
-                            @endphp
-                            <line x1="60" y1="{{ $y }}" x2="490" y2="{{ $y }}" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="3,3"/>
-                            <text x="55" y="{{ $y + 4 }}" text-anchor="end" font-size="11" fill="#64748B">{{ $val >= 1000 ? round($val/1000).'k' : round($val) }}</text>
-                        @endfor
+                @if($groups->sum('users') > 0)
+                    <div style="height: 300px; position: relative;">
+                        <svg viewBox="0 0 500 360" style="width: 100%; height: 100%;">
+                            {{-- Grid lines & Y labels --}}
+                            @for($i = 0; $i <= 5; $i++)
+                                @php
+                                    $val = ($maxVal / 5) * $i;
+                                    $y = 320 - (60 * $i);
+                                @endphp
+                                <line x1="60" y1="{{ $y }}" x2="490" y2="{{ $y }}" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="3,3"/>
+                                <text x="55" y="{{ $y + 4 }}" text-anchor="end" font-size="11" fill="#64748B">{{ round($val) }}</text>
+                            @endfor
 
-                        {{-- Bars --}}
-                        @php
-                            $numGroups = $groups->count();
-                            $totalWidth = 400;
-                            $groupWidth = $totalWidth / $numGroups;
-                            $barWidth = min(24, $groupWidth * 0.35);
-                            $gap = 8;
-                        @endphp
-                        @foreach($groups as $idx => $group)
+                            {{-- Bars --}}
                             @php
-                                $xCenter = 60 + ($groupWidth * $idx) + ($groupWidth / 2);
-                                $x1 = $xCenter - $barWidth - ($gap / 2);
-                                $x2 = $xCenter + ($gap / 2);
-                                $h1 = ($group['users'] / $maxVal) * 300;
-                                $h2 = ($group['completed'] / $maxVal) * 300;
-                                $y1 = 300 - $h1;
-                                $y2 = 300 - $h2;
+                                $numGroups = $groups->count();
+                                $totalWidth = 400;
+                                $groupWidth = $totalWidth / $numGroups;
+                                $barWidth = min(24, $groupWidth * 0.35);
+                                $gap = 8;
                             @endphp
-                            <rect x="{{ $x1 }}" y="{{ $y1 }}" width="{{ $barWidth }}" height="{{ $h1 }}" fill="#0F766E" rx="4"/>
-                            <rect x="{{ $x2 }}" y="{{ $y2 }}" width="{{ $barWidth }}" height="{{ $h2 }}" fill="#0EA5E9" rx="4"/>
-                            
-                            {{-- X labels --}}
-                            @php $words = explode(' ', $group['name']); @endphp
-                            @if(count($words) > 1)
-                                <text x="{{ $xCenter }}" y="320" text-anchor="middle" font-size="10" fill="#64748B">{{ $words[0] }}</text>
-                                <text x="{{ $xCenter }}" y="332" text-anchor="middle" font-size="10" fill="#64748B">{{ implode(' ', array_slice($words, 1)) }}</text>
-                            @else
-                                <text x="{{ $xCenter }}" y="320" text-anchor="middle" font-size="10" fill="#64748B">{{ $group['name'] }}</text>
-                            @endif
-                        @endforeach
+                            @foreach($groups as $idx => $group)
+                                @php
+                                    $xCenter = 60 + ($groupWidth * $idx) + ($groupWidth / 2);
+                                    $x1 = $xCenter - $barWidth - ($gap / 2);
+                                    $x2 = $xCenter + ($gap / 2);
+                                    $h1 = ($group['users'] / $maxVal) * 300;
+                                    $h2 = ($group['completed'] / $maxVal) * 300;
+                                    $y1 = 320 - $h1;
+                                    $y2 = 320 - $h2;
+                                @endphp
+                                <rect x="{{ $x1 }}" y="{{ $y1 }}" width="{{ $barWidth }}" height="{{ $h1 }}" fill="#0F766E" rx="4"/>
+                                <rect x="{{ $x2 }}" y="{{ $y2 }}" width="{{ $barWidth }}" height="{{ $h2 }}" fill="#0EA5E9" rx="4"/>
+                                
+                                {{-- X labels --}}
+                                @php $words = explode(' ', $group['name']); @endphp
+                                @if(count($words) > 1)
+                                    <text x="{{ $xCenter }}" y="340" text-anchor="middle" font-size="10" fill="#64748B">{{ $words[0] }}</text>
+                                    <text x="{{ $xCenter }}" y="352" text-anchor="middle" font-size="10" fill="#64748B">{{ implode(' ', array_slice($words, 1)) }}</text>
+                                @else
+                                    <text x="{{ $xCenter }}" y="340" text-anchor="middle" font-size="10" fill="#64748B">{{ $group['name'] }}</text>
+                                @endif
+                            @endforeach
 
-                        {{-- Axes --}}
-                        <line x1="60" y1="0" x2="60" y2="300" stroke="#94A3B8" stroke-width="2"/>
-                        <line x1="60" y1="300" x2="490" y2="300" stroke="#94A3B8" stroke-width="2"/>
-                    </svg>
-                </div>
-                <div class="flex items-center justify-center gap-6 mt-4 text-xs">
-                    <span class="flex items-center gap-2"><span class="w-3 h-3 bg-teal-700 rounded-sm"></span>Usuarios</span>
-                    <span class="flex items-center gap-2"><span class="w-3 h-3 bg-sky-500 rounded-sm"></span>Tests</span>
-                </div>
+                            {{-- Axes --}}
+                            <line x1="60" y1="20" x2="60" y2="320" stroke="#94A3B8" stroke-width="2"/>
+                            <line x1="60" y1="320" x2="490" y2="320" stroke="#94A3B8" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <div class="flex items-center justify-center gap-6 mt-4 text-xs">
+                        <span class="flex items-center gap-2"><span class="w-3 h-3 bg-teal-700 rounded-sm"></span>Usuarios</span>
+                        <span class="flex items-center gap-2"><span class="w-3 h-3 bg-sky-500 rounded-sm"></span>Tests</span>
+                    </div>
+                @else
+                    <div class="text-center py-12 text-gray-400">
+                        <p class="text-sm">No hay datos de grupos disponibles</p>
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -115,19 +114,29 @@
             <div class="p-6">
                 @php
                     $pieTests = $testStats->filter(fn($t) => $t['completed'] > 0)->map(function($t) {
-                        $colors = ['GAD' => '#F59E0B', 'PHQ' => '#DC2626', 'Rosenberg' => '#10B981', 'Ansiedad' => '#F59E0B', 'Depresión' => '#DC2626', 'Autoestima' => '#10B981'];
-                        $color = '#0EA5E9';
+                        $colors = [
+                            'GAD' => '#F59E0B', 
+                            'Ansiedad' => '#F59E0B', 
+                            'PHQ' => '#DC2626', 
+                            'Depresión' => '#DC2626', 
+                            'Rosenberg' => '#10B981', 
+                            'Autoestima' => '#10B981',
+                            'Inteligencia' => '#0EA5E9',
+                            'Emocional' => '#0EA5E9',
+                        ];
+                        $color = '#6B7280';
                         foreach($colors as $k => $c) {
-                            if(str_contains($t['test'], $k)) { $color = $c; break; }
+                            if(str_contains($t['test'], $k)) { 
+                                $color = $c; 
+                                break; 
+                            }
                         }
                         return ['name' => $t['test'], 'value' => $t['completed'], 'color' => $color];
-                    })->take(4);
+                    })->values();
                     
-                    if ($pieTests->isEmpty() || $pieTests->sum('value') == 0) {
+                    if ($pieTests->isEmpty()) {
                         $pieTests = collect([
-                            ['name' => 'Ansiedad (GAD-7)', 'value' => 2, 'color' => '#F59E0B'],
-                            ['name' => 'Depresión (PHQ-9)', 'value' => 1, 'color' => '#DC2626'],
-                            ['name' => 'Autoestima (Rosenberg)', 'value' => 2, 'color' => '#10B981'],
+                            ['name' => 'Sin datos', 'value' => 1, 'color' => '#E5E7EB'],
                         ]);
                     }
                     
@@ -175,26 +184,54 @@
         </div>
         <div class="p-6">
             @php
-                $levelsData = [
-                    ['nivel' => 'Normal', 'values' => [20, 20, 20, 20]],
-                    ['nivel' => 'Leve', 'values' => [0, 0, 0, 0]],
-                    ['nivel' => 'Moderado', 'values' => [20, 20, 20, 20]],
-                    ['nivel' => 'Alto', 'values' => [20, 20, 20, 20]],
-                ];
+                $allLevels = ['Normal' => 0, 'Leve' => 0, 'Moderado' => 0, 'Alto' => 0];
+                
+                foreach($levelDistribution as $category => $count) {
+                    if (in_array($category, ['mínima', 'normal'])) {
+                        $allLevels['Normal'] += $count;
+                    } elseif ($category === 'leve') {
+                        $allLevels['Leve'] += $count;
+                    } elseif (in_array($category, ['moderada', 'baja'])) {
+                        $allLevels['Moderado'] += $count;
+                    } elseif (in_array($category, ['severa', 'alta'])) {
+                        $allLevels['Alto'] += $count;
+                    }
+                }
+
+                $totalResponses = array_sum($allLevels);
+                $levelsData = [];
+                
+                if ($totalResponses > 0) {
+                    foreach($allLevels as $nivel => $count) {
+                        $percentage = ($count / $totalResponses) * 100;
+                        $levelsData[] = [
+                            'nivel' => $nivel,
+                            'values' => [$percentage, $percentage, $percentage, $percentage]
+                        ];
+                    }
+                } else {
+                    $levelsData = [
+                        ['nivel' => 'Normal', 'values' => [0, 0, 0, 0]],
+                        ['nivel' => 'Leve', 'values' => [0, 0, 0, 0]],
+                        ['nivel' => 'Moderado', 'values' => [0, 0, 0, 0]],
+                        ['nivel' => 'Alto', 'values' => [0, 0, 0, 0]],
+                    ];
+                }
+
                 $catCols = ['#DC2626', '#F59E0B', '#10B981', '#0EA5E9'];
                 $catLabels = ['Depresión', 'Ansiedad', 'Autoestima', 'Int. Emocional'];
             @endphp
             
             <div style="height: 350px; position: relative;">
-                <svg viewBox="0 0 600 390" style="width: 100%; height: 100%;">
+                <svg viewBox="0 0 600 410" style="width: 100%; height: 100%;">
                     {{-- Y label --}}
-                    <text x="15" y="175" text-anchor="middle" font-size="10" fill="#64748B" transform="rotate(-90, 15, 175)">Porcentaje (%)</text>
+                    <text x="15" y="195" text-anchor="middle" font-size="10" fill="#64748B" transform="rotate(-90, 15, 195)">Porcentaje (%)</text>
                     
                     {{-- Grid --}}
                     @for($i = 0; $i <= 5; $i++)
-                        @php $y = 350 - (70 * $i); $val = 20 * $i; @endphp
-                        <line x1="60" y1="{{ $y }}" x2="590" y2="{{ $y }}" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="3,3"/>
-                        <text x="55" y="{{ $y + 4 }}" text-anchor="end" font-size="11" fill="#64748B">{{ $val }}</text>
+                        @php $yL = 370 - (70 * $i); $vL = 20 * $i; @endphp
+                        <line x1="60" y1="{{ $yL }}" x2="590" y2="{{ $yL }}" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="3,3"/>
+                        <text x="55" y="{{ $yL + 4 }}" text-anchor="end" font-size="11" fill="#64748B">{{ $vL }}</text>
                     @endfor
 
                     {{-- Bars --}}
@@ -203,21 +240,21 @@
                         $barWidth = 18;
                         $barGap = 6;
                     @endphp
-                    @foreach($levelsData as $gi => $group)
-                        @foreach($group['values'] as $ci => $val)
+                    @foreach($levelsData as $gi => $grp)
+                        @foreach($grp['values'] as $ci => $val)
                             @php
                                 $h = ($val / 100) * 350;
                                 $x = 80 + ($gi * $groupWidth) + ($ci * ($barWidth + $barGap));
-                                $y = 350 - $h;
+                                $y = 370 - $h;
                             @endphp
                             <rect x="{{ $x }}" y="{{ $y }}" width="{{ $barWidth }}" height="{{ $h }}" fill="{{ $catCols[$ci] }}" rx="3"/>
                         @endforeach
-                        <text x="{{ 80 + ($gi * $groupWidth) + 40 }}" y="370" text-anchor="middle" font-size="11" fill="#64748B">{{ $group['nivel'] }}</text>
+                        <text x="{{ 80 + ($gi * $groupWidth) + 40 }}" y="390" text-anchor="middle" font-size="11" fill="#64748B">{{ $grp['nivel'] }}</text>
                     @endforeach
 
                     {{-- Axes --}}
-                    <line x1="60" y1="0" x2="60" y2="350" stroke="#94A3B8" stroke-width="2"/>
-                    <line x1="60" y1="350" x2="590" y2="350" stroke="#94A3B8" stroke-width="2"/>
+                    <line x1="60" y1="20" x2="60" y2="370" stroke="#94A3B8" stroke-width="2"/>
+                    <line x1="60" y1="370" x2="590" y2="370" stroke="#94A3B8" stroke-width="2"/>
                 </svg>
             </div>
             <div class="flex flex-wrap items-center justify-center gap-6 mt-4 text-xs">
@@ -244,28 +281,27 @@
                         'pendientes' => $monthlyTrends['pending'][$i]
                     ];
                 }
-                $tMax = max(array_merge($monthlyTrends['completed'], $monthlyTrends['pending']));
-                $tMax = $tMax < 5 ? 5 : $tMax; // Mínimo 5 para escala
+                $tMax = max(1, max(array_merge($monthlyTrends['completed'], $monthlyTrends['pending'])));
             @endphp
             
             <div style="height: 300px; position: relative;">
-                <svg viewBox="0 0 600 340" style="width: 100%; height: 100%;">
+                <svg viewBox="0 0 600 360" style="width: 100%; height: 100%;">
                     {{-- Grid --}}
                     @for($i = 0; $i <= 5; $i++)
-                        @php $y = 300 - (60 * $i); $val = ($tMax / 5) * $i; @endphp
+                        @php $y = 320 - (60 * $i); $val = ($tMax / 5) * $i; @endphp
                         <line x1="50" y1="{{ $y }}" x2="590" y2="{{ $y }}" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="3,3"/>
                         <text x="45" y="{{ $y + 4 }}" text-anchor="end" font-size="11" fill="#64748B">{{ round($val) }}</text>
                     @endfor
 
                     {{-- Lines --}}
                     @php
-                        $xSpacing = 540 / (count($trends) - 1);
+                        $xSpacing = 540 / max(1, count($trends) - 1);
                         $compPts = [];
                         $pendPts = [];
                         foreach($trends as $idx => $t) {
                             $x = 50 + ($xSpacing * $idx);
-                            $compPts[] = ['x' => $x, 'y' => 300 - (($t['completados'] / $tMax) * 300)];
-                            $pendPts[] = ['x' => $x, 'y' => 300 - (($t['pendientes'] / $tMax) * 300)];
+                            $compPts[] = ['x' => $x, 'y' => 320 - (($t['completados'] / $tMax) * 300)];
+                            $pendPts[] = ['x' => $x, 'y' => 320 - (($t['pendientes'] / $tMax) * 300)];
                         }
                         $compPath = implode(' ', array_map(fn($p) => $p['x'].','.$p['y'], $compPts));
                         $pendPath = implode(' ', array_map(fn($p) => $p['x'].','.$p['y'], $pendPts));
@@ -278,12 +314,12 @@
                     @foreach($compPts as $idx => $pt)
                         <circle cx="{{ $pt['x'] }}" cy="{{ $pt['y'] }}" r="4.5" fill="#10B981" stroke="white" stroke-width="2"/>
                         <circle cx="{{ $pendPts[$idx]['x'] }}" cy="{{ $pendPts[$idx]['y'] }}" r="4.5" fill="#F59E0B" stroke="white" stroke-width="2"/>
-                        <text x="{{ $pt['x'] }}" y="322" text-anchor="middle" font-size="11" fill="#64748B">{{ $trends[$idx]['mes'] }}</text>
+                        <text x="{{ $pt['x'] }}" y="342" text-anchor="middle" font-size="11" fill="#64748B">{{ $trends[$idx]['mes'] }}</text>
                     @endforeach
 
                     {{-- Axes --}}
-                    <line x1="50" y1="0" x2="50" y2="300" stroke="#94A3B8" stroke-width="2"/>
-                    <line x1="50" y1="300" x2="590" y2="300" stroke="#94A3B8" stroke-width="2"/>
+                    <line x1="50" y1="20" x2="50" y2="320" stroke="#94A3B8" stroke-width="2"/>
+                    <line x1="50" y1="320" x2="590" y2="320" stroke="#94A3B8" stroke-width="2"/>
                 </svg>
             </div>
             <div class="flex items-center justify-center gap-6 mt-4 text-xs">
@@ -298,7 +334,7 @@
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
             <p class="text-sm text-gray-500 mb-2">Tasa de Completado</p>
             <p class="text-3xl font-bold text-gray-900 mb-2">{{ $generalStats['completion_rate'] }}%</p>
-            <p class="text-xs text-emerald-600">vs tests asignados</p>
+            <p class="text-xs text-gray-400">De tests asignados</p>
         </div>
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
             <p class="text-sm text-gray-500 mb-2">Tiempo Promedio</p>
@@ -306,7 +342,7 @@
             <p class="text-xs text-gray-400">Por evaluación</p>
         </div>
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-            <p class="text-sm text-gray-500 mb-2">Total Evaluaciones</p>
+            <p class="text-sm text-gray-500 mb-2">Evaluaciones Completadas</p>
             <p class="text-3xl font-bold text-gray-900 mb-2">{{ $generalStats['total_completed'] }}</p>
             <p class="text-xs text-emerald-600">+{{ $generalStats['this_month'] }} este mes</p>
         </div>
@@ -319,7 +355,7 @@
             <li>• Los datos mostrados son agregados y anonimizados para proteger la confidencialidad</li>
             <li>• Los reportes no incluyen información personal identificable</li>
             <li>• Los indicadores representan niveles generales, no diagnósticos clínicos</li>
-            <li>• Los datos se actualizan en tiempo real</li>
+            <li>• Los datos se actualizan en tiempo real según el período seleccionado</li>
         </ul>
     </div>
 

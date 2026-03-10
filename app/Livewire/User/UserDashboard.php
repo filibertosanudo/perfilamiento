@@ -36,12 +36,17 @@ class UserDashboard extends Component
             return $item['assignment']->due_date;
         })->first();
 
+        $completedTestsCount = TestResponse::where('user_id', auth()->id())
+            ->where('completed', true)
+            ->count();
+
         return view('livewire.user.user-dashboard', [
             'stats' => $stats,
             'pendingTests' => $pendingTests,
             'inProgressTests' => $inProgressTests,
             'completedTests' => $completedTests->take(5), // Últimos 5
             'nextDueDate' => $nextDueDate,
+            'completedTestsCount' => $completedTestsCount,
         ]);
     }
 
