@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\TestAssignment;
 use App\Models\Group;         
-use App\Models\Institution;   
+use App\Models\Area;   
 use Illuminate\Support\Str;   
 
 class PdfController extends Controller
@@ -27,7 +27,7 @@ class PdfController extends Controller
      */
     public function downloadTestResult($responseId)
     {
-        $response = TestResponse::with(['assignment.test', 'user.institution'])
+        $response = TestResponse::with(['assignment.test', 'user.area'])
             ->findOrFail($responseId);
 
         // Verificar permisos
@@ -80,7 +80,7 @@ class PdfController extends Controller
             $userId = $userId ?? $user->id;
         }
 
-        $targetUser = User::with(['institution'])->findOrFail($userId);
+        $targetUser = User::with(['area'])->findOrFail($userId);
 
         // Verificar permisos de orientador
         if ($user->role_id === 2 && $userId !== $user->id) {
@@ -171,7 +171,7 @@ class PdfController extends Controller
     {
         $user = Auth::user();
 
-        $group = \App\Models\Group::with(['users', 'creator', 'institution'])
+        $group = \App\Models\Group::with(['users', 'creator', 'area'])
             ->findOrFail($groupId);
 
         // Verificar permisos
@@ -246,7 +246,7 @@ class PdfController extends Controller
             $userId = $userId ?? $user->id;
         }
 
-        $targetUser = User::with(['institution'])->findOrFail($userId);
+        $targetUser = User::with(['area'])->findOrFail($userId);
 
         // Verificar permisos de orientador
         if ($user->role_id === 2 && $userId !== $user->id) {
@@ -477,8 +477,8 @@ class PdfController extends Controller
             ? min(100, round(($total_tests / $total_assignments) * 100, 1)) 
             : 0;
 
-        $active_institutions = \App\Models\Institution::where('active', true)->count();
-        $total_institutions = \App\Models\Institution::count();
+        $active_areas = \App\Models\Area::where('active', true)->count();
+        $total_areas = \App\Models\Area::count();
 
         $metrics = [
             'total_users' => $total_users,
@@ -487,19 +487,19 @@ class PdfController extends Controller
             'tests_growth' => $tests_growth,
             'completion_rate' => $completion_rate,
             'completion_trend' => 0, // Placeholder
-            'active_institutions' => $active_institutions,
-            'total_institutions' => $total_institutions,
+            'active_areas' => $active_areas,
+            'total_areas' => $total_areas,
         ];
 
-        // Estadísticas por institución
-        $institutionStats = \App\Models\Institution::where('active', true)
+        // Estadísticas por área
+        $areaStats = \App\Models\Area::where('active', true)
             ->get()
-            ->map(function ($institution) use ($startDate, $endDate) {
-                $users = User::where('institution_id', $institution->id)
+            ->map(function ($area) use ($startDate, $endDate) {
+                $users = User::where('area_id', $area->id)
                     ->where('active', true)
                     ->count();
                 
-                $userIds = User::where('institution_id', $institution->id)
+                $userIds = User::where('area_id', $area->id)
                     ->pluck('id');
                 
                 $tests = TestResponse::whereIn('user_id', $userIds)
@@ -508,7 +508,7 @@ class PdfController extends Controller
                     ->count();
 
                 return [
-                    'name' => $institution->name,
+                    'name' => $area->name,
                     'users' => $users,
                     'tests' => $tests,
                 ];
@@ -549,24 +549,24 @@ class PdfController extends Controller
             ->filter(fn($t) => $t['count'] > 0)
             ->values();
 
-        // Detalle por institución
-        $institutionDetails = \App\Models\Institution::where('active', true)
+        // Detalle por área
+        $areaDetails = \App\Models\Area::where('active', true)
             ->get()
-            ->map(function ($institution) use ($startDate, $endDate) {
-                $users = User::where('institution_id', $institution->id)
+            ->map(function ($area) use ($startDate, $endDate) {
+                $users = User::where('area_id', $area->id)
                     ->where('active', true)
                     ->count();
                 
-                $advisors = User::where('institution_id', $institution->id)
+                $advisors = User::where('area_id', $area->id)
                     ->where('role_id', 2)
                     ->where('active', true)
                     ->count();
                 
-                $groups = \App\Models\Group::where('institution_id', $institution->id)
+                $groups = \App\Models\Group::where('area_id', $area->id)
                     ->where('active', true)
                     ->count();
                 
-                $userIds = User::where('institution_id', $institution->id)->pluck('id');
+                $userIds = User::where('area_id', $area->id)->pluck('id');
                 
                 $completed = TestResponse::whereIn('user_id', $userIds)
                     ->where('completed', true)
@@ -597,7 +597,7 @@ class PdfController extends Controller
                 }
 
                 return [
-                    'name' => $institution->name,
+                    'name' => $area->name,
                     'users' => $users,
                     'advisors' => $advisors,
                     'groups' => $groups,
@@ -610,8 +610,8 @@ class PdfController extends Controller
             ->values();
 
         // Top Performers
-        $topPerformers = $institutionDetails->take(5)->map(function($inst) use ($startDate, $endDate) {
-            $userIds = User::where('institution_id', \App\Models\Institution::where('name', $inst['name'])->first()->id ?? 0)
+        $topPerformers = $areaDetails->take(5)->map(function($areaData) use ($startDate, $endDate) {
+            $userIds = User::where('area_id', \App\Models\Area::where('name', $areaData['name'])->first()->id ?? 0)
                 ->pluck('id');
             
             $testsCompleted = TestResponse::whereIn('user_id', $userIds)
@@ -625,9 +625,9 @@ class PdfController extends Controller
                 ->avg('numeric_result');
 
             return [
-                'name' => $inst['name'],
+                'name' => $areaData['name'],
                 'tests_completed' => $testsCompleted,
-                'completion_rate' => $inst['completion_rate'],
+                'completion_rate' => $areaData['completion_rate'],
                 'avg_score' => round($avgScore ?? 0, 1),
             ];
         });
@@ -639,12 +639,12 @@ class PdfController extends Controller
             $recommendations[] = 'La tasa de completación general es baja. Considere implementar recordatorios automáticos más frecuentes.';
         }
         
-        if ($institutionDetails->where('performance', 'low')->count() > 0) {
-            $recommendations[] = 'Algunas instituciones necesitan apoyo adicional. Programe sesiones de capacitación para orientadores.';
+        if ($areaDetails->where('performance', 'low')->count() > 0) {
+            $recommendations[] = 'Algunas áreas necesitan apoyo adicional. Programe sesiones de capacitación para orientadores.';
         }
         
         if ($tests_growth < 5) {
-            $recommendations[] = 'El crecimiento en evaluaciones es bajo. Promueva activamente el uso del sistema entre las instituciones.';
+            $recommendations[] = 'El crecimiento en evaluaciones es bajo. Promueva activamente el uso del sistema entre las áreas.';
         }
         
         if (empty($recommendations)) {
@@ -655,9 +655,9 @@ class PdfController extends Controller
         $data = [
             'period_label' => $period_label,
             'metrics' => $metrics,
-            'institutionStats' => $institutionStats,
+            'areaStats' => $areaStats,
             'testDistribution' => $testDistribution,
-            'institutionDetails' => $institutionDetails,
+            'areaDetails' => $areaDetails,
             'topPerformers' => $topPerformers,
             'recommendations' => $recommendations,
         ];

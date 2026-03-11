@@ -68,15 +68,15 @@ class UserDashboard extends Component
             ->with('test')
             ->get();
 
-        // Asignaciones por institución
-        $institutionAssignments = TestAssignment::where('institution_id', $user->institution_id)
+        // Asignaciones por área
+        $areaAssignments = TestAssignment::where('area_id', $user->area_id)
             ->where('active', true)
             ->with('test')
             ->get();
 
         return $individualAssignments
             ->merge($groupAssignments)
-            ->merge($institutionAssignments)
+            ->merge($areaAssignments)
             ->unique('id');
     }
 

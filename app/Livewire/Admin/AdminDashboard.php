@@ -5,7 +5,7 @@ namespace App\Livewire\Admin;
 use Livewire\Component;
 use App\Models\User;
 use App\Models\Group;
-use App\Models\Institution;
+use App\Models\Area;
 use App\Models\Test;
 use App\Models\TestAssignment;
 use App\Models\TestResponse;
@@ -26,8 +26,8 @@ class AdminDashboard extends Component
         // Distribución de resultados por categoría
         $categoryDistribution = $this->getCategoryDistribution();
 
-        // Instituciones más activas
-        $topInstitutions = $this->getTopInstitutions();
+        // Áreas más activas
+        $topAreas = $this->getTopAreas();
 
         // Tests más utilizados
         $topTests = $this->getTopTests();
@@ -45,7 +45,7 @@ class AdminDashboard extends Component
             'stats' => $stats,
             'monthlyCompletions' => $monthlyCompletions,
             'categoryDistribution' => $categoryDistribution,
-            'topInstitutions' => $topInstitutions,
+            'topAreas' => $topAreas,
             'topTests' => $topTests,
             'topAdvisors' => $topAdvisors,
             'concerningResults' => $concerningResults,
@@ -62,7 +62,7 @@ class AdminDashboard extends Component
         $totalUsers = User::where('role_id', 3)->where('active', true)->count();
         $totalAdvisors = User::where('role_id', 2)->where('active', true)->count();
         $totalGroups = Group::where('active', true)->count();
-        $totalInstitutions = Institution::where('active', true)->count();
+        $totalAreas = Area::where('active', true)->count();
 
         $totalAssignments = TestAssignment::where('active', true)->count();
         $totalCompleted = TestResponse::where('completed', true)->count();
@@ -96,7 +96,7 @@ class AdminDashboard extends Component
             'total_users' => $totalUsers,
             'total_advisors' => $totalAdvisors,
             'total_groups' => $totalGroups,
-            'total_institutions' => $totalInstitutions,
+            'total_areas' => $totalAreas,
             'total_assignments' => $totalAssignments,
             'total_completed' => $totalCompleted,
             'total_pending' => $totalPending,
@@ -146,11 +146,11 @@ class AdminDashboard extends Component
     }
 
     /**
-     * Instituciones más activas
+     * Áreas más activas
      */
-    private function getTopInstitutions(): Collection
+    private function getTopAreas(): Collection
     {
-        return Institution::withCount([
+        return Area::withCount([
             'users' => function ($q) {
                 $q->where('active', true);
             }
@@ -194,7 +194,7 @@ class AdminDashboard extends Component
     {
         $advisors = User::where('role_id', 2)
             ->where('active', true)
-            ->with('institution')
+            ->with('area')
             ->withCount('assignedTests')
             ->orderBy('assigned_tests_count', 'desc')
             ->limit(5)

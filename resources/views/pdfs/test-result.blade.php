@@ -1,6 +1,6 @@
 @extends('pdfs.layout', [
     'title' => 'Resultado de Test',
-    'institution' => $user->institution->name ?? 'Institución'
+    'institution' => $user->area->name ?? 'Área'
 ])
 
 @section('content')

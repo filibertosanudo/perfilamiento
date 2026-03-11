@@ -90,7 +90,7 @@
                     <input
                         wire:model.live.debounce.300ms="search"
                         type="text"
-                        placeholder="Buscar por nombre, descripción o institución..."
+                        placeholder="Buscar por nombre, descripción o área..."
                         class="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors"
                     >
                 </div>
@@ -124,9 +124,9 @@
                             </div>
                         </th>
 
-                        {{-- Institución --}}
+                        {{-- Área --}}
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Institución
+                            Área
                         </th>
 
                         {{-- Orientador --}}
@@ -205,9 +205,9 @@
                             </div>
                         </td>
 
-                        {{-- Institución --}}
+                        {{-- Área --}}
                         <td class="px-6 py-4">
-                            @if($group->institution)
+                            @if($group->area)
                                 <div class="flex items-center gap-1.5 text-sm text-gray-600">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13"
                                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -216,7 +216,7 @@
                                         <rect x="2" y="7" width="20" height="14" rx="2"/>
                                         <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
                                     </svg>
-                                    {{ $group->institution->name }}
+                                    {{ $group->area->name }}
                                 </div>
                             @endif
                         </td>
@@ -442,20 +442,20 @@
                         @enderror
                     </div>
 
-                    {{-- Institución --}}
+                    {{-- Área --}}
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">
-                            Institución <span class="text-red-500">*</span>
+                            Área <span class="text-red-500">*</span>
                         </label>
-                        <select wire:model.live="institution_id"
+                        <select wire:model.live="area_id"
                             {{ $isViewMode || auth()->user()->role_id === 2 ? 'disabled' : '' }}
                             class="block w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed">
-                            <option value="">Seleccionar institución...</option>
-                            @foreach($institutions as $institution)
-                                <option value="{{ $institution->id }}">{{ $institution->name }}</option>
+                            <option value="">Seleccionar área...</option>
+                            @foreach($areas as $area)
+                                <option value="{{ $area->id }}">{{ $area->name }}</option>
                             @endforeach
                         </select>
-                        @error('institution_id')
+                        @error('area_id')
                             <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span>
                         @enderror
                     </div>
@@ -467,7 +467,7 @@
                                 Orientador <span class="text-red-500">*</span>
                             </label>
                             
-                            @if($institution_id && $advisors->isNotEmpty())
+                            @if($area_id && $advisors->isNotEmpty())
                                 <select wire:model.blur="creator_id"
                                     {{ $isViewMode ? 'disabled' : '' }}
                                     class="block w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed">
@@ -478,7 +478,7 @@
                                         </option>
                                     @endforeach
                                 </select>
-                            @elseif($institution_id && $advisors->isEmpty())
+                            @elseif($area_id && $advisors->isEmpty())
                                 <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
                                     <div class="flex gap-2">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" 
@@ -489,12 +489,12 @@
                                             <path d="M12 9v4"/>
                                             <path d="M12 17h.01"/>
                                         </svg>
-                                        <span>No hay orientadores disponibles en esta institución.</span>
+                                        <span>No hay orientadores disponibles en esta área.</span>
                                     </div>
                                 </div>
                             @else
                                 <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-500">
-                                    Selecciona una institución primero
+                                    Selecciona una área primero
                                 </div>
                             @endif
                             

@@ -26,7 +26,7 @@ class ShowUserResult extends Component
         $this->response = TestResponse::with([
             'assignment.test.questions.answerOptions',
             'assignment.assignedBy',
-            'user.institution',
+            'user.area',
             'user.groups',
             'details.question',
             'details.answerOption'

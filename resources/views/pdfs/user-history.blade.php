@@ -1,6 +1,6 @@
 @extends('pdfs.layout', [
     'title' => 'Historial de Evaluaciones',
-    'institution' => $user->institution->name ?? 'Institución'
+    'institution' => $user->area->name ?? 'Área'
 ])
 
 @section('content')
@@ -23,7 +23,7 @@
         </div>
         <div class="info-row">
             <span class="info-label">Institución:</span>
-            <span class="info-value">{{ $user->institution->name ?? 'N/A' }}</span>
+            <span class="info-value">{{ $user->area->name ?? 'N/A' }}</span>
         </div>
         <div class="info-row">
             <span class="info-label">Total de Evaluaciones:</span>

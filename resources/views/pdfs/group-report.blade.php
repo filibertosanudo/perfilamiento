@@ -1,6 +1,6 @@
 @extends('pdfs.layout', [
     'title' => 'Reporte de Grupo',
-    'institution' => $group->institution->name ?? 'Institución'
+    'institution' => $group->area->name ?? 'Área'
 ])
 
 @section('content')
@@ -19,7 +19,7 @@
         </div>
         <div class="info-row">
             <span class="info-label">Institución:</span>
-            <span class="info-value">{{ $group->institution->name ?? 'N/A' }}</span>
+            <span class="info-value">{{ $group->area->name ?? 'N/A' }}</span>
         </div>
         <div class="info-row">
             <span class="info-label">Orientador:</span>

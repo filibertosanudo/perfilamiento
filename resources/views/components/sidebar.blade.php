@@ -30,9 +30,9 @@
                     ['id' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'dashboard', 'route' => 'dashboard'],
                     ['id' => 'usuarios', 'label' => 'Gestión de Usuarios', 'icon' => 'users', 'route' => 'admin.users'],
                     ['id' => 'grupos', 'label' => 'Gestión de Grupos', 'icon' => 'groups', 'route' => 'grupos.index'],
+                    ['id' => 'areas', 'label' => 'Gestión de Áreas', 'icon' => 'user-cog', 'route' => 'admin.areas'],
                     ['id' => 'tests', 'label' => 'Asignar Tests', 'icon' => 'clipboard', 'route' => 'tests.assignments'],
                     ['id' => 'resultados', 'label' => 'Resultados', 'icon' => 'file-text', 'route' => 'advisor.results'],
-                    ['id' => 'instituciones', 'label' => 'Instituciones', 'icon' => 'user-cog', 'route' => 'admin.instituciones'],
                     ['id' => 'configuracion', 'label' => 'Configuración', 'icon' => 'settings', 'route' => 'admin.configuracion'],
                 ];
             } elseif ($role == 2) { // Orientador

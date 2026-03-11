@@ -13,7 +13,7 @@ class TestAssignment extends Model
         'assigned_by',
         'user_id',
         'group_id',
-        'institution_id',
+        'area_id',
         'assigned_at',
         'due_date',
         'active',
@@ -56,11 +56,11 @@ class TestAssignment extends Model
     }
 
     /**
-     * Institución asignada (nullable)
+     * Área asignada (nullable)
      */
-    public function institution(): BelongsTo
+    public function area(): BelongsTo
     {
-        return $this->belongsTo(Institution::class);
+        return $this->belongsTo(Area::class);
     }
 
     public function responses(): HasMany
@@ -76,7 +76,7 @@ class TestAssignment extends Model
         return match(true) {
             !is_null($this->user_id)        => 'user',
             !is_null($this->group_id)       => 'group',
-            !is_null($this->institution_id) => 'institution',
+            !is_null($this->area_id)        => 'area',
             default                         => 'unknown',
         };
     }
@@ -89,7 +89,7 @@ class TestAssignment extends Model
         return match($this->target_type) {
             'user'        => $this->user,
             'group'       => $this->group,
-            'institution' => $this->institution,
+            'area'        => $this->area,
             default       => null,
         };
     }
@@ -104,8 +104,8 @@ class TestAssignment extends Model
             return $this->group->users;
         }
 
-        if ($this->institution_id) {
-            return User::where('institution_id', $this->institution_id)
+        if ($this->area_id) {
+            return User::where('area_id', $this->area_id)
                 ->where('role_id', 3)
                 ->where('active', true)
                 ->get();

@@ -57,7 +57,7 @@
             <div class="flex items-baseline gap-2">
                 <span class="text-3xl font-bold text-gray-900">{{ $stats['total_groups'] }}</span>
             </div>
-            <p class="text-xs text-gray-500 mt-2">{{ $stats['total_institutions'] }} instituciones</p>
+            <p class="text-xs text-gray-500 mt-2">{{ $stats['total_areas'] }} areas</p>
         </div>
 
         {{-- Tests Completados --}}
@@ -163,23 +163,23 @@
         </div>
     </div>
 
-    {{-- Instituciones + Tests Más Utilizados --}}
+    {{-- Áreas + Tests Más Utilizados --}}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        {{-- Instituciones Más Activas --}}
+        {{-- Áreas Más Activas --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-bold text-gray-900">Instituciones Más Activas</h3>
+                <h3 class="text-lg font-bold text-gray-900">Áreas Más Activas</h3>
             </div>
             <div class="p-6">
-                @forelse($topInstitutions as $institution)
+                @forelse($topAreas as $area)
                     <div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
                         <div class="flex-1">
-                            <p class="font-medium text-gray-900">{{ $institution->name }}</p>
-                            <p class="text-xs text-gray-500">{{ $institution->users_count }} usuarios</p>
+                            <p class="font-medium text-gray-900">{{ $area->name }}</p>
+                            <p class="text-xs text-gray-500">{{ $area->users_count }} usuarios</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-lg font-bold text-teal-600">{{ $institution->completed_tests_count }}</p>
+                            <p class="text-lg font-bold text-teal-600">{{ $area->completed_tests_count }}</p>
                             <p class="text-xs text-gray-500">tests</p>
                         </div>
                     </div>
@@ -223,7 +223,7 @@
                 <thead>
                     <tr class="border-b border-gray-100 bg-gray-50/60">
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Orientador</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Institución</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Área</th>
                         <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Grupos</th>
                         <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Usuarios</th>
                         <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Tests Asignados</th>
@@ -243,7 +243,7 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-700">{{ $advisor->institution->name }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">{{ $advisor->area->name }}</td>
                             <td class="px-6 py-4 text-center text-sm font-medium text-gray-900">{{ $advisor->groups_count }}</td>
                             <td class="px-6 py-4 text-center text-sm font-medium text-gray-900">{{ $advisor->total_users ?? 0 }}</td>
                             <td class="px-6 py-4 text-center text-sm font-bold text-teal-600">{{ $advisor->assigned_tests_count }}</td>

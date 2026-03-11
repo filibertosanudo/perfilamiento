@@ -175,9 +175,19 @@
                                         {{ strtoupper(substr($response->user->first_name, 0, 1)) }}
                                     </div>
                                     <div>
-                                        <p class="text-sm font-medium text-gray-900">
-                                            {{ $response->user->first_name }} {{ $response->user->last_name }}
-                                        </p>
+                                        <div class="flex items-center gap-1.5">
+                                            <p class="text-sm font-medium text-gray-900">
+                                                {{ $response->user->first_name }} {{ $response->user->last_name }}
+                                            </p>
+                                            @if($response->user->advisorComments()->where('flag_follow_up', true)->exists())
+                                                <span title="Usuario marcado para seguimiento"
+                                                    class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
+                                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clip-rule="evenodd"/>
+                                                    </svg>
+                                                </span>
+                                            @endif
+                                        </div>
                                         <p class="text-xs text-gray-500">{{ $response->user->email }}</p>
                                     </div>
                                 </div>

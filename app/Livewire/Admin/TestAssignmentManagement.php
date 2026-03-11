@@ -9,7 +9,7 @@ use App\Models\TestAssignment;
 use App\Models\Test;
 use App\Models\User;
 use App\Models\Group;
-use App\Models\Institution;
+use App\Models\Area;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -38,7 +38,7 @@ class TestAssignmentManagement extends Component
     public string $assignment_type = 'individual';
     public ?int $user_id = null;
     public ?int $group_id = null;
-    public ?int $institution_id = null;
+    public ?int $area_id = null;
     public ?string $due_date = null;
     public int $active = 1;
 
@@ -60,10 +60,10 @@ class TestAssignmentManagement extends Component
         
         $user = auth()->user();
 
-        if ($this->assignment_type === 'institution' && $user->role_id === 2) {
-            $this->institution_id = $user->institution_id;
+        if ($this->assignment_type === 'area' && $user->role_id === 2) {
+            $this->area_id = $user->area_id;
         } else {
-            $this->institution_id = null;
+            $this->area_id = null;
         }
     }
 
@@ -87,8 +87,8 @@ class TestAssignmentManagement extends Component
 
         $user = auth()->user();
 
-        if ($this->assignment_type === 'institution' && $user->role_id === 2) {
-            $this->institution_id = $user->institution_id;
+        if ($this->assignment_type === 'area' && $user->role_id === 2) {
+            $this->area_id = $user->area_id;
         }
 
         $this->dispatch('modal-opened');
@@ -111,7 +111,7 @@ class TestAssignmentManagement extends Component
         $this->isViewMode = false;
         
         if (auth()->user()->role_id === 2) {
-            $this->institution_id = auth()->user()->institution_id;
+            $this->area_id = auth()->user()->area_id;
         }
         
         $this->due_date = now()->addWeek()->format('Y-m-d');
@@ -136,9 +136,9 @@ class TestAssignmentManagement extends Component
         } elseif ($assignment->group_id) {
             $this->assignment_type = 'group';
             $this->group_id = $assignment->group_id;
-        } elseif ($assignment->institution_id) {
-            $this->assignment_type = 'institution';
-            $this->institution_id = $assignment->institution_id;
+        } elseif ($assignment->area_id) {
+            $this->assignment_type = 'area';
+            $this->area_id = $assignment->area_id;
         }
 
         $this->openModal();
@@ -163,7 +163,7 @@ class TestAssignmentManagement extends Component
 
         $rules = [
             'test_id' => 'required|exists:tests,id',
-            'assignment_type' => 'required|in:individual,group,institution',
+            'assignment_type' => 'required|in:individual,group,area',
             'due_date' => 'required|date|after:' . now()->addDays(6)->format('Y-m-d'),
         ];
 
@@ -171,8 +171,8 @@ class TestAssignmentManagement extends Component
             $rules['user_id'] = 'required|exists:users,id';
         } elseif ($this->assignment_type === 'group') {
             $rules['group_id'] = 'required|exists:groups,id';
-        } elseif ($this->assignment_type === 'institution') {
-            $rules['institution_id'] = 'required|exists:institutions,id';
+        } elseif ($this->assignment_type === 'area') {
+            $rules['area_id'] = 'required|exists:areas,id';
         }
 
         $this->validate($rules, [
@@ -180,7 +180,7 @@ class TestAssignmentManagement extends Component
             'test_id.exists' => 'El test seleccionado no es válido.',
             'user_id.required' => 'Debes seleccionar un usuario.',
             'group_id.required' => 'Debes seleccionar un grupo.',
-            'institution_id.required' => 'Debes seleccionar una institución.',
+            'area_id.required' => 'Debes seleccionar un área.',
             'due_date.required' => 'Debes establecer una fecha límite.',
             'due_date.after' => 'La fecha límite debe ser al menos 7 días a partir de hoy.',
         ]);
@@ -194,7 +194,7 @@ class TestAssignmentManagement extends Component
                 'assigned_by' => $isNew ? auth()->id() : TestAssignment::find($this->assignmentId)->assigned_by,
                 'user_id' => $this->assignment_type === 'individual' ? $this->user_id : null,
                 'group_id' => $this->assignment_type === 'group' ? $this->group_id : null,
-                'institution_id' => $this->assignment_type === 'institution' ? $this->institution_id : null,
+                'area_id' => $this->assignment_type === 'area' ? $this->area_id : null,
                 'assigned_at' => $isNew ? now() : TestAssignment::find($this->assignmentId)->assigned_at,
                 'due_date' => $this->due_date,
                 'active' => true,
@@ -213,9 +213,9 @@ class TestAssignmentManagement extends Component
             } elseif ($this->assignment_type === 'group' && $this->group_id) {
                 $group = Group::with('users')->find($this->group_id);
                 $affectedUsers = $group->users;
-            } elseif ($this->assignment_type === 'institution' && $this->institution_id) {
-                $institution = Institution::with('users')->find($this->institution_id);
-                $affectedUsers = $institution->users->where('role_id', 3);
+            } elseif ($this->assignment_type === 'area' && $this->area_id) {
+                $area = Area::with('users')->find($this->area_id);
+                $affectedUsers = $area->users->where('role_id', 3);
             }
 
             // Enviar notificación a cada usuario
@@ -287,7 +287,7 @@ class TestAssignmentManagement extends Component
         $currentUser = auth()->user();
         $search = $this->search;
 
-        $query = TestAssignment::with(['test', 'assignedBy', 'user', 'group', 'institution', 'responses'])
+        $query = TestAssignment::with(['test', 'assignedBy', 'user', 'group', 'area', 'responses'])
             ->when(!$this->showInactive, fn ($q) => $q->where('active', true))
             ->when($currentUser->role_id === 2, function ($q) use ($currentUser) {
                 // Orientador ve: sus asignaciones + asignaciones de admin a sus grupos
@@ -310,7 +310,7 @@ class TestAssignmentManagement extends Component
             'tests' => $this->getAvailableTests(),
             'users' => $this->getAvailableUsers($currentUser),
             'groups' => $this->getAvailableGroups($currentUser),
-            'institutions' => $this->getAvailableInstitutions($currentUser),
+            'areas' => $this->getAvailableAreas($currentUser),
         ]);
     }
 
@@ -330,7 +330,7 @@ class TestAssignmentManagement extends Component
             ->orWhereHas('group', function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%");
             })
-            ->orWhereHas('institution', function ($q) use ($search) {
+            ->orWhereHas('area', function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%");
             });
         });
@@ -392,19 +392,19 @@ class TestAssignmentManagement extends Component
         return $query->orderBy('name')->get();
     }
 
-    private function getAvailableInstitutions(User $currentUser): Collection
+    private function getAvailableAreas(User $currentUser): Collection
     {
-        if (!$this->isOpen || $this->assignment_type !== 'institution') {
+        if (!$this->isOpen || $this->assignment_type !== 'area') {
             return collect();
         }
 
         if ($currentUser->role_id === 2) {
-            return Institution::where('id', $currentUser->institution_id)
+            return Area::where('id', $currentUser->area_id)
                 ->where('active', true)
                 ->get();
         }
 
-        return Institution::where('active', true)->orderBy('name')->get();
+        return Area::where('active', true)->orderBy('name')->get();
     }
 
     private function resetInputFields(): void
@@ -414,7 +414,7 @@ class TestAssignmentManagement extends Component
         $this->assignment_type = 'individual';
         $this->user_id = null;
         $this->group_id = null;
-        $this->institution_id = null;
+        $this->area_id = null;
         $this->due_date = null;
         $this->active = 1;
         $this->resetValidation();

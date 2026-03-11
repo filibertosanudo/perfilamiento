@@ -87,7 +87,7 @@
                 <input
                     wire:model.live.debounce.300ms="search"
                     type="text"
-                    placeholder="Buscar por test, usuario, grupo o institución..."
+                    placeholder="Buscar por test, usuario, grupo o área..."
                     class="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors"
                 >
             </div>
@@ -193,13 +193,13 @@
                                     </svg>
                                     Grupal
                                 </span>
-                            @elseif($assignment->institution_id)
+                            @elseif($assignment->area_id)
                                 <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-amber-100 text-amber-700">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <rect x="2" y="7" width="20" height="14" rx="2"/>
                                         <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
                                     </svg>
-                                    Institucional
+                                    Por Área
                                 </span>
                             @endif
                         </td>
@@ -228,15 +228,15 @@
                                         <p class="text-xs text-gray-500">{{ $assignment->group->users->count() }} miembros</p>
                                     </div>
                                 </div>
-                            @elseif($assignment->institution_id)
+                            @elseif($assignment->area_id)
                                 <div class="flex items-center gap-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-600">
                                         <rect x="2" y="7" width="20" height="14" rx="2"/>
                                         <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
                                     </svg>
                                     <div>
-                                        <p class="text-sm font-medium text-gray-900">{{ $assignment->institution->name }}</p>
-                                        <p class="text-xs text-gray-500">Toda la institución</p>
+                                        <p class="text-sm font-medium text-gray-900">{{ $assignment->area->name }}</p>
+                                        <p class="text-xs text-gray-500">Toda la área</p>
                                     </div>
                                 </div>
                             @endif
@@ -479,14 +479,14 @@
                                 </div>
                             </label>
 
-                            <label class="relative flex items-center justify-center p-3 border-2 rounded-lg {{ $isViewMode ? 'cursor-not-allowed opacity-60' : 'cursor-pointer' }} transition-all {{ $assignment_type === 'institution' ? 'border-teal-600 bg-teal-50' : 'border-gray-200 hover:border-gray-300' }}">
-                                <input type="radio" wire:model.live="assignment_type" value="institution" class="sr-only" {{ $isViewMode ? 'disabled' : '' }}>
+                            <label class="relative flex items-center justify-center p-3 border-2 rounded-lg {{ $isViewMode ? 'cursor-not-allowed opacity-60' : 'cursor-pointer' }} transition-all {{ $assignment_type === 'area' ? 'border-teal-600 bg-teal-50' : 'border-gray-200 hover:border-gray-300' }}">
+                                <input type="radio" wire:model.live="assignment_type" value="area" class="sr-only" {{ $isViewMode ? 'disabled' : '' }}>
                                 <div class="text-center">
-                                    <svg class="w-6 h-6 mx-auto {{ $assignment_type === 'institution' ? 'text-teal-600' : 'text-gray-400' }}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <svg class="w-6 h-6 mx-auto {{ $assignment_type === 'area' ? 'text-teal-600' : 'text-gray-400' }}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <rect x="2" y="7" width="20" height="14" rx="2"/>
                                         <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
                                     </svg>
-                                    <span class="text-xs font-medium mt-1 {{ $assignment_type === 'institution' ? 'text-teal-700' : 'text-gray-600' }}">Institución</span>
+                                    <span class="text-xs font-medium mt-1 {{ $assignment_type === 'area' ? 'text-teal-700' : 'text-gray-600' }}">Área</span>
                                 </div>
                             </label>
                         </div>
@@ -531,26 +531,26 @@
                                 <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span>
                             @enderror
                         </div>
-                    @elseif($assignment_type === 'institution')
+                    @elseif($assignment_type === 'area')
                         <div>
                             <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">
-                                Institución <span class="text-red-500">*</span>
+                                Área <span class="text-red-500">*</span>
                             </label>
-                            <select wire:model.live="institution_id"
+                            <select wire:model.live="area_id"
                                 {{ $isViewMode || auth()->user()->role_id === 2 ? 'disabled' : '' }}
                                 class="block w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed">
                                 
                                 @if(auth()->user()->role_id !== 2)
-                                    <option value="">Seleccionar institución...</option>
+                                    <option value="">Seleccionar área...</option>
                                 @endif
                                 
-                                @foreach($institutions as $institution)
-                                    <option value="{{ $institution->id }}">
-                                        {{ $institution->name }}
+                                @foreach($areas as $area)
+                                    <option value="{{ $area->id }}">
+                                        {{ $area->name }}
                                     </option>
                                 @endforeach
                             </select>
-                            @error('institution_id')
+                            @error('area_id')
                                 <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span>
                             @enderror
                         </div>

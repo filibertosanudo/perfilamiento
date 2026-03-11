@@ -51,7 +51,7 @@
         border-bottom: 2px solid #0F766E;
     }
 
-    .institution-card {
+    .area-card {
         background: white;
         border: 1px solid #E5E7EB;
         border-radius: 8px;
@@ -59,20 +59,20 @@
         margin-bottom: 15px;
     }
 
-    .institution-header {
+    .area-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 10px;
     }
 
-    .institution-name {
+    .area-name {
         font-size: 11pt;
         font-weight: bold;
         color: #1F2937;
     }
 
-    .institution-badge {
+    .area-badge {
         display: inline-block;
         padding: 4px 10px;
         border-radius: 20px;
@@ -149,26 +149,26 @@
         </div>
 
         <div class="metric-card">
-            <div class="metric-label">Instituciones Activas</div>
-            <div class="metric-value">{{ $metrics['active_institutions'] }}</div>
+            <div class="metric-label">Áreas Activas</div>
+            <div class="metric-value">{{ $metrics['active_areas'] }}</div>
             <div class="metric-change">
-                de {{ $metrics['total_institutions'] }} registradas
+                de {{ $metrics['total_areas'] }} registradas
             </div>
         </div>
     </div>
 
-    <!-- Chart 1: Participación por Institución -->
-    <div class="section-title">Participación por Institución</div>
+    <!-- Chart 1: Participación por Área -->
+    <div class="section-title">Participación por Área</div>
     
     <?php
-        $institutions = collect($institutionStats)->take(6);
-        if ($institutions->isEmpty()) {
-            $institutions = collect([['name' => 'Sin datos', 'users' => 0, 'tests' => 0]]);
+        $areas = collect($areaStats)->take(6);
+        if ($areas->isEmpty()) {
+            $areas = collect([['name' => 'Sin datos', 'users' => 0, 'tests' => 0]]);
         }
-        $maxVal = max(1, $institutions->max('users'), $institutions->max('tests'));
+        $maxVal = max(1, $areas->max('users'), $areas->max('tests'));
     ?>
     
-    <?php if($institutions->sum('users') > 0): ?>
+    <?php if($areas->sum('users') > 0): ?>
     <div style="text-align: center; margin-bottom: 30px;">
         <svg viewBox="0 0 600 360" style="max-width: 100%; height: auto;">
             <?php for($i = 0; $i <= 5; $i++): ?>
@@ -181,14 +181,14 @@
             <?php endfor; ?>
 
             <?php
-                $numInst = $institutions->count();
+                $numInst = $areas->count();
                 $totalWidth = 480;
                 $groupWidth = $totalWidth / $numInst;
                 $barWidth = min(30, $groupWidth * 0.35);
                 $gap = 10;
             ?>
             
-            <?php foreach($institutions as $idx => $inst): ?>
+            <?php foreach($areas as $idx => $inst): ?>
                 <?php
                     $xCenter = 80 + ($groupWidth * $idx) + ($groupWidth / 2);
                     $x1 = $xCenter - $barWidth - ($gap / 2);
@@ -275,18 +275,18 @@
         </div>
     </div>
 
-    <!-- Instituciones Detalle -->
+    <!-- Áreas Detalle -->
     <div class="page-break"></div>
-    <div class="section-title">Detalle por Institución</div>
+    <div class="section-title">Detalle por Área</div>
 
-    <?php foreach($institutionDetails as $institution): ?>
-        <div class="institution-card">
-            <div class="institution-header">
-                <div class="institution-name">{{ $institution['name'] }}</div>
-                <span class="institution-badge badge-{{ $institution['performance'] }}">
-                    <?php if($institution['performance'] === 'high'): ?>
+    <?php foreach($areaDetails as $area): ?>
+        <div class="area-card">
+            <div class="area-header">
+                <div class="area-name">{{ $area['name'] }}</div>
+                <span class="area-badge badge-{{ $area['performance'] }}">
+                    <?php if($area['performance'] === 'high'): ?>
                         Alto Rendimiento
-                    <?php elseif($institution['performance'] === 'medium'): ?>
+                    <?php elseif($area['performance'] === 'medium'): ?>
                         Rendimiento Medio
                     <?php else: ?>
                         Necesita Atención
@@ -296,26 +296,26 @@
             
             <div class="stats-row">
                 <div class="stat-item">
-                    <div class="stat-number">{{ $institution['users'] }}</div>
+                    <div class="stat-number">{{ $area['users'] }}</div>
                     <div class="stat-label">Usuarios</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-number">{{ $institution['advisors'] }}</div>
+                    <div class="stat-number">{{ $area['advisors'] }}</div>
                     <div class="stat-label">Orientadores</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-number">{{ $institution['groups'] }}</div>
+                    <div class="stat-number">{{ $area['groups'] }}</div>
                     <div class="stat-label">Grupos</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-number">{{ $institution['completion_rate'] }}%</div>
+                    <div class="stat-number">{{ $area['completion_rate'] }}%</div>
                     <div class="stat-label">Tasa Completado</div>
                 </div>
             </div>
             
-            <?php if($institution['notes']): ?>
+            <?php if($area['notes']): ?>
                 <p style="margin-top: 10px; font-size: 9pt; color: #64748B; font-style: italic;">
-                    {{ $institution['notes'] }}
+                    {{ $area['notes'] }}
                 </p>
             <?php endif; ?>
         </div>
@@ -329,7 +329,7 @@
         <thead>
             <tr>
                 <th style="text-align: center;">#</th>
-                <th>Institución</th>
+                <th>Área</th>
                 <th style="text-align: center;">Tests Completados</th>
                 <th style="text-align: center;">Tasa Completado</th>
                 <th style="text-align: center;">Promedio de Puntaje</th>
@@ -362,6 +362,6 @@
 
     <!-- Footer Note -->
     <div class="disclaimer">
-        <p><strong>Nota:</strong> Este reporte proporciona una visión global del sistema. Los datos son agregados y anonimizados. Para información detallada de instituciones específicas, genere reportes individuales. Los indicadores de rendimiento se calculan en base a la tasa de completación, participación activa y tiempo de respuesta promedio.</p>
+        <p><strong>Nota:</strong> Este reporte proporciona una visión global del sistema. Los datos son agregados y anonimizados. Para información detallada de áreas específicas, genere reportes individuales. Los indicadores de rendimiento se calculan en base a la tasa de completación, participación activa y tiempo de respuesta promedio.</p>
     </div>
 @endsection

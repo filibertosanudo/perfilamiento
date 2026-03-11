@@ -41,7 +41,7 @@
                         <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                         </svg>
-                        <span class="text-gray-700">{{ $response->user->institution->name }}</span>
+                        <span class="text-gray-700">{{ $response->user->area->name }}</span>
                     </div>
                     @php
                         // Si es admin, mostrar todos los grupos del usuario
@@ -249,6 +249,14 @@
             </div>
         </div>
     @endif
+
+    {{-- Comentarios del Orientador --}}
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        @livewire('advisor.advisor-comments', [
+            'userId'         => $response->user_id,
+            'testResponseId' => $response->id,
+        ], key('comments-' . $response->id))
+    </div>
 
     {{-- Detalle de Respuestas --}}
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">

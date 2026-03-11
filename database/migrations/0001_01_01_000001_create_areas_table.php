@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('institutions', function (Blueprint $table) {
+        Schema::create('areas', function (Blueprint $table) {
             $table->id();
             $table->string('name', 200);
             $table->string('type', 60)->nullable();
@@ -18,12 +18,12 @@ return new class extends Migration
             $table->boolean('active')->default(true);
             $table->timestamps();
 
-            $table->index('active', 'idx_institutions_active');
+            $table->index('active', 'idx_areas_active');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('institutions');
+        Schema::dropIfExists('areas');
     }
 };

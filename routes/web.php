@@ -42,10 +42,10 @@ Route::middleware([
             return view('admin.users');
         })->name('users');
 
-        // Instituciones (TODO)
-        // Route::get('/instituciones', function () {
-        //     return view('admin.institutions');
-        // })->name('instituciones');
+        // Gestión de Áreas
+        Route::get('/areas', function () {
+            return view('admin.areas');
+        })->name('areas');
 
         // Reportes Generales (TODO)
         // Route::get('/reportes', function () {

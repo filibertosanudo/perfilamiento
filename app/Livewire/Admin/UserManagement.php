@@ -6,7 +6,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Renderless;
 use App\Models\User;
-use App\Models\Institution;
+use App\Models\Area;
 use Illuminate\Support\Str;
 use App\Notifications\UserInvitation;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -39,7 +39,7 @@ class UserManagement extends Component
     public string $second_last_name = '';
     public string $email            = '';
     public string $phone            = '';
-    public ?int  $institution_id   = null;
+    public ?int  $area_id          = null;
     public ?int  $role_id          = null;
     public int   $active           = 1;
 
@@ -96,9 +96,9 @@ class UserManagement extends Component
         $this->resetInputFields();
         $this->isViewMode = false;
         
-        // Si es orientador, pre-seleccionar su institución
+        // Si es orientador, pre-seleccionar su área
         if (auth()->user()->role_id === 2) {
-            $this->institution_id = auth()->user()->institution_id;
+            $this->area_id = auth()->user()->area_id;
         }
         
         $this->openModal();
@@ -115,7 +115,7 @@ class UserManagement extends Component
         $this->second_last_name = $user->second_last_name ?? '';
         $this->email            = $user->email;
         $this->phone            = $user->phone ?? '';
-        $this->institution_id   = $user->institution_id;
+        $this->area_id          = $user->area_id;
         $this->role_id          = $user->role_id;
         $this->active           = $user->active ? 1 : 0;
         $this->isViewMode       = false;
@@ -153,7 +153,7 @@ class UserManagement extends Component
             'role_id'          => 'required|integer|in:1,2,3',
             'second_last_name' => 'nullable|string|max:100|regex:/^[\pL\s]+$/u',
             'phone'            => 'nullable|string|regex:/^[\d\s\-\(\)\+]+$/|min:10|max:20',
-            'institution_id'   => 'nullable|exists:institutions,id',
+            'area_id'          => 'nullable|exists:areas,id',
             'active'           => 'required|boolean',
         ], [
             'first_name.required'     => 'El nombre es obligatorio.',
@@ -170,7 +170,7 @@ class UserManagement extends Component
             'phone.min'               => 'El teléfono debe tener al menos 10 dígitos.',
             'role_id.required'        => 'Debes seleccionar un tipo de usuario.',
             'role_id.in'              => 'El tipo de usuario seleccionado no es válido.',
-            'institution_id.exists'   => 'La institución seleccionada no existe.',
+            'area_id.exists'          => 'El área seleccionada no existe.',
         ]);
 
         $isNew = !$this->userId;
@@ -184,7 +184,7 @@ class UserManagement extends Component
                 'second_last_name'   => $this->second_last_name ? trim($this->second_last_name) : null,
                 'email'              => strtolower(trim($this->email)),
                 'phone'              => $this->phone ? preg_replace('/\s+/', '', $this->phone) : null,
-                'institution_id'     => $this->institution_id,
+                'area_id'            => $this->area_id,
                 'role_id'            => $this->role_id,
                 'active'             => $this->active,
                 'invitation_token'   => $isNew ? $invitationToken : null,
@@ -213,7 +213,7 @@ class UserManagement extends Component
                         'last_name'      => $this->last_name,
                         'email'          => $this->email,
                         'role_id'        => $this->role_id,
-                        'institution_id' => $this->institution_id,
+                        'area_id'        => $this->area_id,
                         'active'         => $this->active,
                     ]
                 ]
@@ -278,16 +278,16 @@ class UserManagement extends Component
         $currentUser = auth()->user();
         $search = $this->search;
 
-        $institutionIds = $this->getInstitutionIdsBySearch($search);
+        $areaIds = $this->getAreaIdsBySearch($search);
 
-        $query = User::with(['institution', 'groups.creator'])
+        $query = User::with(['area', 'groups.creator'])
             ->when(!$this->showInactive, fn ($q) => $q->where('active', true))
             ->when($currentUser->role_id === 2, fn ($q) => $this->applyOrientadorRestrictions($q, $currentUser))
             ->when(
                 $currentUser->role_id === 1 && $this->filterRole,
                 fn ($q) => $q->where('role_id', $this->filterRole)
             )
-            ->where(fn ($q) => $this->applySearch($q, $search, $institutionIds));
+            ->where(fn ($q) => $this->applySearch($q, $search, $areaIds));
 
         $users = $query
             ->orderBy($this->sortField, $this->sortDirection)
@@ -296,20 +296,20 @@ class UserManagement extends Component
         return view('livewire.admin.user-management', [
             'users'        => $users,
             'totalUsers'   => $this->getTotalUsers($currentUser),
-            'institutions' => $this->getAvailableInstitutions($currentUser),
+            'areas'        => $this->getAvailableAreas($currentUser),
         ]);
     }
 
     /**
-     * Obtiene IDs de instituciones que coinciden con el término de búsqueda
+     * Obtiene IDs de áreas que coinciden con el término de búsqueda
      */
-    private function getInstitutionIdsBySearch(?string $search): Collection
+    private function getAreaIdsBySearch(?string $search): Collection
     {
         if (!$search) {
             return collect();
         }
 
-        return \DB::table('institutions')
+        return \DB::table('areas')
             ->where('name', 'like', "%{$search}%")
             ->pluck('id');
     }
@@ -327,31 +327,31 @@ class UserManagement extends Component
     }
 
     /**
-     * Aplica filtros de búsqueda por nombre, email e institución
+     * Aplica filtros de búsqueda por nombre, email y área
      */
-    private function applySearch(Builder $query, ?string $search, Collection $institutionIds): void
+    private function applySearch(Builder $query, ?string $search, Collection $areaIds): void
     {
-        $query->where(function ($q) use ($search, $institutionIds) {
+        $query->where(function ($q) use ($search, $areaIds) {
             if ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
                 ->orWhere('last_name',  'like', "%{$search}%")
                 ->orWhere('email',      'like', "%{$search}%");
             }
 
-            if ($institutionIds->isNotEmpty()) {
-                $q->orWhereIn('institution_id', $institutionIds);
+            if ($areaIds->isNotEmpty()) {
+                $q->orWhereIn('area_id', $areaIds);
             }
         });
     }
 
     /**
-     * Obtiene instituciones disponibles según el rol del usuario
+     * Obtiene áreas disponibles según el rol del usuario
      */
-    private function getAvailableInstitutions(User $currentUser): Collection
+    private function getAvailableAreas(User $currentUser): Collection
     {
         return $currentUser->role_id === 1
-            ? Institution::where('active', true)->orderBy('name')->get()
-            : Institution::where('id', $currentUser->institution_id)
+            ? Area::where('active', true)->orderBy('name')->get()
+            : Area::where('id', $currentUser->area_id)
                 ->where('active', true)
                 ->get();
     }
@@ -376,7 +376,7 @@ class UserManagement extends Component
         $this->second_last_name = '';
         $this->email            = '';
         $this->phone            = '';
-        $this->institution_id   = null;
+        $this->area_id          = null;
         $this->role_id          = null;
         $this->active           = 1;
         $this->resetValidation();

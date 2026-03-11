@@ -1,6 +1,6 @@
 @extends('pdfs.layout', [
     'title' => 'Reporte de Estadísticas',
-    'institution' => $advisor->institution->name ?? 'Institución'
+    'institution' => $advisor->area->name ?? 'Área'
 ])
 
 @push('styles')

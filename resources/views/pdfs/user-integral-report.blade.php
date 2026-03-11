@@ -1,6 +1,6 @@
 @extends('pdfs.layout', [
     'title' => 'Reporte de Bienestar Integral',
-    'institution' => $user->institution->name ?? 'Institución'
+    'institution' => $user->area->name ?? 'Área'
 ])
 
 @push('styles')
@@ -226,7 +226,7 @@
     <div class="info-box" style="margin-top: 30px;">
         <h3>Recursos de Apoyo</h3>
         <ul style="margin-top: 10px; margin-left: 20px; line-height: 1.8; font-size: 10pt;">
-            <li>Servicio de Orientación Psicológica: {{ $user->institution->name ?? 'Contactar institución' }}</li>
+            <li>Servicio de Orientación Psicológica: {{ $user->area->name ?? 'Contactar área' }}</li>
             <li>Línea Nacional de Prevención del Suicidio: 800-273-8255</li>
             <li>Chat de Crisis: Envía "HOLA" al 741741</li>
             <li>Directorio de profesionales de salud mental en tu área</li>

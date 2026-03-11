@@ -22,7 +22,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'role_id',
-        'institution_id',
+        'area_id',
         'first_name',
         'last_name',
         'second_last_name',
@@ -91,11 +91,11 @@ class User extends Authenticatable
     }
 
     /**
-     * Institución a la que pertenece (nullable para admin global)
+     * Área/Facultad a la que pertenece (nullable para admin global)
      */
-    public function institution(): BelongsTo
+    public function area(): BelongsTo
     {
-        return $this->belongsTo(Institution::class);
+        return $this->belongsTo(Area::class);
     }
 
     /**
@@ -258,5 +258,13 @@ class User extends Authenticatable
     public function testResponses(): HasMany
     {
         return $this->hasMany(TestResponse::class);
+    }
+
+    /**
+     * Comentarios privados del orientador sobre este usuario
+     */
+    public function advisorComments(): HasMany
+    {
+        return $this->hasMany(\App\Models\AdvisorComment::class);
     }
 }
