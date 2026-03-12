@@ -5,10 +5,14 @@ namespace App\Livewire\User;
 use Livewire\Component;
 use App\Models\TestAssignment;
 use App\Models\TestResponse;
+use App\Models\ResponseDetail;
 use Illuminate\Support\Collection;
 
 class UserDashboard extends Component
 {
+    public bool $showDetailModal = false;
+    public ?TestResponse $selectedResult = null;
+    public $selectedDetails = [];
     public function render()
     {
         $user = auth()->user();
@@ -40,6 +44,15 @@ class UserDashboard extends Component
             ->where('completed', true)
             ->count();
 
+        $quotes = [
+            "Cada pequeño paso te acerca a tu mejor versión.",
+            "Tus emociones son válidas, siempre.",
+            "Pedir ayuda es un acto de gran valentía.",
+            "Tómate un respiro, estás haciendo un gran trabajo.",
+            "Tu bienestar mental es la base de todo lo que construyes.",
+        ];
+        $motivationalQuote = $quotes[array_rand($quotes)];
+
         return view('livewire.user.user-dashboard', [
             'stats' => $stats,
             'pendingTests' => $pendingTests,
@@ -47,6 +60,7 @@ class UserDashboard extends Component
             'completedTests' => $completedTests->take(5), // Últimos 5
             'nextDueDate' => $nextDueDate,
             'completedTestsCount' => $completedTestsCount,
+            'motivationalQuote' => $motivationalQuote,
         ]);
     }
 
@@ -162,5 +176,30 @@ class UserDashboard extends Component
 
         $daysSinceLastTest = $lastResponse->finished_at->diffInDays(now());
         return $daysSinceLastTest >= $test->minimum_retest_time;
+    }
+
+    public function showResultDetails(int $responseId)
+    {
+        $this->selectedResult = TestResponse::with([
+            'assignment.test',
+            'assignment.assignedBy'
+        ])->findOrFail($responseId);
+
+        if ($this->selectedResult->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $this->selectedDetails = ResponseDetail::where('test_response_id', $responseId)
+            ->with(['question', 'answerOption'])
+            ->get();
+
+        $this->showDetailModal = true;
+    }
+
+    public function closeModal()
+    {
+        $this->showDetailModal = false;
+        $this->selectedResult = null;
+        $this->selectedDetails = [];
     }
 }

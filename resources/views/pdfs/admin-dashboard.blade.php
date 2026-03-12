@@ -1,6 +1,6 @@
 @extends('pdfs.layout', [
     'title' => 'Dashboard Global del Sistema',
-    'institution' => 'Sistema Completo'
+    'institution' => 'Admin - Dashboard'
 ])
 
 @push('styles')
@@ -279,14 +279,14 @@
     <div class="page-break"></div>
     <div class="section-title">Detalle por Área</div>
 
-    <?php foreach($areaDetails as $area): ?>
+    <?php foreach($areaDetails as $itemArea): ?>
         <div class="area-card">
             <div class="area-header">
-                <div class="area-name">{{ $area['name'] }}</div>
-                <span class="area-badge badge-{{ $area['performance'] }}">
-                    <?php if($area['performance'] === 'high'): ?>
+                <div class="area-name">{{ $itemArea['name'] }}</div>
+                <span class="area-badge badge-{{ $itemArea['performance'] }}">
+                    <?php if($itemArea['performance'] === 'high'): ?>
                         Alto Rendimiento
-                    <?php elseif($area['performance'] === 'medium'): ?>
+                    <?php elseif($itemArea['performance'] === 'medium'): ?>
                         Rendimiento Medio
                     <?php else: ?>
                         Necesita Atención
@@ -296,26 +296,26 @@
             
             <div class="stats-row">
                 <div class="stat-item">
-                    <div class="stat-number">{{ $area['users'] }}</div>
+                    <div class="stat-number">{{ $itemArea['users'] }}</div>
                     <div class="stat-label">Usuarios</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-number">{{ $area['advisors'] }}</div>
+                    <div class="stat-number">{{ $itemArea['advisors'] }}</div>
                     <div class="stat-label">Orientadores</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-number">{{ $area['groups'] }}</div>
+                    <div class="stat-number">{{ $itemArea['groups'] }}</div>
                     <div class="stat-label">Grupos</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-number">{{ $area['completion_rate'] }}%</div>
+                    <div class="stat-number">{{ $itemArea['completion_rate'] }}%</div>
                     <div class="stat-label">Tasa Completado</div>
                 </div>
             </div>
             
-            <?php if($area['notes']): ?>
+            <?php if($itemArea['notes']): ?>
                 <p style="margin-top: 10px; font-size: 9pt; color: #64748B; font-style: italic;">
-                    {{ $area['notes'] }}
+                    {{ $itemArea['notes'] }}
                 </p>
             <?php endif; ?>
         </div>

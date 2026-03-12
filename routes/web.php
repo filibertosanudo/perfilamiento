@@ -117,15 +117,19 @@ Route::middleware([
         Route::get('/resultados/{responseId}', function ($responseId) {
             return view('results.show', ['responseId' => $responseId]);
         })->name('results.show');
+    });
 
-        // PDFs para Usuarios
+    // ========================================
+    // RUTAS PDF COMPARTIDAS (Acceso controlado por el controlador)
+    // ========================================
+    Route::middleware(['role:admin,advisor,user'])->group(function () {
         Route::get('/pdf/test-result/{responseId}', [PdfController::class, 'downloadTestResult'])
             ->name('pdf.test-result');
         
-        Route::get('/pdf/my-history', [PdfController::class, 'downloadUserHistory'])
+        Route::get('/pdf/user-history/{userId?}', [PdfController::class, 'downloadUserHistory'])
             ->name('pdf.user-history');
 
-        Route::get('/pdf/my-integral-report', [PdfController::class, 'downloadUserIntegralReport'])
+        Route::get('/pdf/user-integral/{userId?}', [PdfController::class, 'downloadUserIntegralReport'])
             ->name('pdf.user-integral');
     });
 

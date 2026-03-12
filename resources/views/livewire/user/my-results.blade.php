@@ -159,10 +159,10 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-right">
-                                <a href="{{ route('results.show', $response->id) }}"
+                                <button wire:click="showResultDetails({{ $response->id }})"
                                     class="text-sm text-teal-600 hover:text-teal-700 font-medium hover:underline">
                                     Ver Detalles
-                                </a>
+                                </button>
                             </td>
                         </tr>
                     @empty
@@ -194,5 +194,91 @@
             {{ $results->links() }}
         </div>
     </div>
+
+    {{-- Detail Modal --}}
+    @if($showDetailModal && $selectedResult)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col max-h-[90vh]" x-data @keydown.escape.window="$wire.closeModal()">
+                
+                {{-- Modal Header --}}
+                @php
+                    $categoryColors = [
+                        'mínima' => 'emerald',
+                        'leve' => 'blue',
+                        'moderada' => 'amber',
+                        'severa' => 'red',
+                        'normal' => 'emerald',
+                        'baja' => 'amber',
+                        'alta' => 'emerald',
+                    ];
+                    $category = strtolower($selectedResult->result_category ?? 'normal');
+                    $badgeColor = 'gray';
+                    foreach ($categoryColors as $key => $color) {
+                        if (str_contains($category, $key)) {
+                            $badgeColor = $color;
+                            break;
+                        }
+                    }
+                @endphp
+                <div class="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4 rounded-t-2xl text-white flex justify-between items-start shrink-0">
+                    <div>
+                        <h2 class="text-xl font-bold mb-1">{{ $selectedResult->assignment->test->name }}</h2>
+                        <div class="flex items-center gap-3 text-teal-100 text-sm">
+                            <span>Puntaje: {{ $selectedResult->numeric_result }} / {{ $selectedResult->assignment->test->max_score }}</span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-{{ $badgeColor }}-100 text-{{ $badgeColor }}-700">
+                                {{ ucfirst($selectedResult->result_category) }}
+                            </span>
+                        </div>
+                    </div>
+                    <button wire:click="closeModal" class="p-2 rounded-lg hover:bg-white/20 text-white transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                {{-- Modal Body (Scrollable) --}}
+                <div class="p-6 overflow-y-auto space-y-4 flex-1">
+                    @foreach($selectedDetails as $index => $detail)
+                        <div class="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
+                            <div class="flex items-start gap-3">
+                                <div class="w-7 h-7 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                                    {{ $index + 1 }}
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="text-sm font-medium text-gray-900 mb-2">
+                                        {{ $detail->question->text }}
+                                    </h4>
+                                    <div class="bg-teal-50 border border-teal-200 rounded-lg p-3 flex justify-between items-center">
+                                        <div class="flex items-center gap-2">
+                                            <svg class="w-4 h-4 text-teal-600" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                            </svg>
+                                            <span class="text-sm font-medium text-teal-900">
+                                                {{ $detail->answerOption->text }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/40 rounded-b-2xl shrink-0 flex justify-between items-center">
+                    <a href="{{ route('results.show', $selectedResult->id) }}" class="text-sm text-teal-600 hover:text-teal-700 font-medium hover:underline">
+                        Ver análisis completo
+                    </a>
+                    <a href="{{ route('pdf.test-result', $selectedResult->id) }}" target="_blank" download class="text-sm text-indigo-600 hover:text-indigo-700 font-medium hover:underline">
+                        Descargar PDF
+                    </a>
+                    <button wire:click="closeModal" class="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg font-medium transition-colors">
+                        Cerrar
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    @endif
 
 </div>

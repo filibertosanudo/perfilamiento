@@ -35,12 +35,13 @@ class PdfController extends Controller
         if ($user->role_id === 3 && $response->user_id !== $user->id) {
             abort(403, 'No tienes permiso para acceder a este resultado.');
         } elseif ($user->role_id === 2) {
-            // Verificar que el orientador tenga acceso al usuario
-            $hasAccess = $response->user->groups()
-                ->where('creator_id', $user->id)
-                ->exists();
+            // Un orientador solo puede ver el resultado si él realizó la asignación
+            // o si el test fue asignado a un grupo que él administra.
+            $hasAccess = $response->assignment->assigned_by === $user->id
+                || ($response->assignment->group_id && $response->assignment->group->creator_id === $user->id);
+                
             if (!$hasAccess) {
-                abort(403, 'No tienes permiso para acceder a este resultado.');
+                abort(403, 'No tienes permiso para acceder a este resultado específico.');
             }
         }
 
@@ -48,12 +49,14 @@ class PdfController extends Controller
             'response' => $response,
             'test' => $response->assignment->test,
             'user' => $response->user,
+            'institution' => $response->user->area->name ?? 'Evaluación Individual',
+            'title' => 'Resultado de Test - ' . $response->user->full_name,
         ];
 
         $filename = 'resultado_' 
-            . str_replace(' ', '_', $response->assignment->test->name) 
+            . Str::slug($response->assignment->test->name, '_') 
             . '_' 
-            . $response->user->first_name 
+            . Str::slug($response->user->first_name, '_') 
             . '_' 
             . now()->format('Y-m-d') 
             . '.pdf';
@@ -82,36 +85,45 @@ class PdfController extends Controller
 
         $targetUser = User::with(['area'])->findOrFail($userId);
 
-        // Verificar permisos de orientador
-        if ($user->role_id === 2 && $userId !== $user->id) {
-            $hasAccess = $targetUser->groups()
-                ->where('creator_id', $user->id)
-                ->exists();
-            if (!$hasAccess) {
-                abort(403, 'No tienes permiso para acceder a este usuario.');
-            }
+        // Obtener respuestas accesibles para el orientador
+        $responsesQuery = TestResponse::with(['assignment.test'])
+            ->where('user_id', $userId)
+            ->where('completed', true);
+
+        if ($user->role_id === 2) {
+            // Filtrar solo las respuestas que el orientador tiene permiso de ver
+            $responsesQuery->where(function($q) use ($user) {
+                $q->whereHas('assignment', function($sub) use ($user) {
+                    $sub->where('assigned_by', $user->id);
+                })
+                ->orWhereHas('assignment.group', function($sub) use ($user) {
+                    $sub->where('creator_id', $user->id);
+                });
+            });
         }
 
-        $responses = TestResponse::with(['assignment.test'])
-            ->where('user_id', $userId)
-            ->where('completed', true)
-            ->orderBy('finished_at', 'desc')
-            ->get();
+        $responses = $responsesQuery->orderBy('finished_at', 'desc')->get();
+
+        if ($user->role_id === 2 && $responses->isEmpty()) {
+            abort(403, 'No tienes acceso a ninguna evaluación de este usuario.');
+        }
 
         $data = [
             'user' => $targetUser,
             'responses' => $responses,
+            'institution' => $targetUser->area->name ?? 'Historial Académico',
+            'title' => 'Historial Académico - ' . $targetUser->full_name,
         ];
 
         $filename = 'historial_' 
-            . $targetUser->first_name 
+            . Str::slug($targetUser->first_name, '_') 
             . '_' 
-            . $targetUser->last_name 
+            . Str::slug($targetUser->last_name, '_') 
             . '_' 
             . now()->format('Y-m-d') 
             . '.pdf';
 
-        return $this->pdfService->downloadFromView(
+        return $this->pdfService->streamFromView(
             'pdfs.user-history',
             $data,
             $filename,
@@ -141,9 +153,11 @@ class PdfController extends Controller
         $data['advisor'] = $user;
         $data['period'] = $advisorStats->period;
         $data['generated_at'] = now();
+        $data['institution'] = $user->area->name ?? 'Reporte Orientador';
+        $data['title'] = 'Estadísticas del Orientador';
 
         $filename = 'estadisticas_orientador_' 
-            . $user->first_name 
+            . Str::slug($user->first_name, '_') 
             . '_' 
             . now()->format('Y-m-d') 
             . '.pdf';
@@ -216,10 +230,12 @@ class PdfController extends Controller
             'stats' => $stats,
             'testStats' => $testStats,
             'advisor' => $user,
+            'institution' => $group->area->name ?? 'Reporte de Grupo',
+            'title' => 'Reporte de Grupo - ' . $group->name,
         ];
 
         $filename = 'reporte_grupo_' 
-            . str_replace(' ', '_', $group->name) 
+            . Str::slug($group->name, '_') 
             . '_' 
             . now()->format('Y-m-d') 
             . '.pdf';
@@ -248,26 +264,27 @@ class PdfController extends Controller
 
         $targetUser = User::with(['area'])->findOrFail($userId);
 
-        // Verificar permisos de orientador
-        if ($user->role_id === 2 && $userId !== $user->id) {
-            $hasAccess = $targetUser->groups()
-                ->where('creator_id', $user->id)
-                ->exists();
-            if (!$hasAccess) {
-                abort(403, 'No tienes permiso para acceder a este usuario.');
-            }
+        // Obtener solo las respuestas que el orientador tiene permiso de ver
+        $responsesQuery = TestResponse::with(['assignment.test'])
+            ->where('user_id', $userId)
+            ->where('completed', true);
+
+        if ($user->role_id === 2) {
+            $responsesQuery->where(function($q) use ($user) {
+                $q->whereHas('assignment', function($sub) use ($user) {
+                    $sub->where('assigned_by', $user->id);
+                })
+                ->orWhereHas('assignment.group', function($sub) use ($user) {
+                    $sub->where('creator_id', $user->id);
+                });
+            });
         }
 
-        // Obtener todas las respuestas completadas
-        $responses = TestResponse::with(['assignment.test'])
-            ->where('user_id', $userId)
-            ->where('completed', true)
-            ->orderBy('finished_at', 'desc')
-            ->get();
+        $responses = $responsesQuery->orderBy('finished_at', 'desc')->get();
 
-        // Verificar que tenga al menos 3 tests
+        // Verificar que tenga al menos 3 tests accesibles
         if ($responses->count() < 3) {
-            abort(400, 'Se requieren al menos 3 evaluaciones completadas para generar el reporte integral.');
+            abort(400, 'Se requieren al menos 3 evaluaciones completadas y autorizadas para generar el reporte integral.');
         }
 
         // Calcular período
@@ -369,17 +386,19 @@ class PdfController extends Controller
             'recommendations' => $recommendations,
             'startDate' => $startDate,
             'endDate' => $endDate,
+            'institution' => $targetUser->area->name ?? 'Reporte Integral',
+            'title' => 'Reporte Integral - ' . $targetUser->full_name,
         ];
 
         $filename = 'reporte_integral_' 
-            . $targetUser->first_name 
+            . Str::slug($targetUser->first_name, '_') 
             . '_' 
-            . $targetUser->last_name 
+            . Str::slug($targetUser->last_name, '_') 
             . '_' 
             . now()->format('Y-m-d') 
             . '.pdf';
 
-        return $this->pdfService->downloadFromView(
+        return $this->pdfService->streamFromView(
             'pdfs.user-integral-report',
             $data,
             $filename
