@@ -7,6 +7,8 @@ use App\Models\TestAssignment;
 use App\Models\TestResponse;
 use App\Models\ResponseDetail;
 use App\Models\Question;
+use App\Models\User;
+use App\Helpers\NotificationHelper;
 use Illuminate\Support\Collection;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests; 
 
@@ -109,7 +111,7 @@ class TakeTest extends Component
     }
 
     /**
-     * Guardar respuesta y avanzar
+     * Guardar respuesta
      */
     public function answerQuestion(int $answerOptionId): void
     {
@@ -132,13 +134,20 @@ class TakeTest extends Component
 
         // Calcular progreso
         $this->progress = (count($this->answers) / $this->questions->count()) * 100;
+    }
 
-        // Verificar si es la última pregunta
-        if ($this->currentQuestionIndex < $this->questions->count() - 1) {
-            $this->nextQuestion();
-        } else {
-            $this->completeTest();
+    /**
+     * Finalizar test
+     */
+    public function finishTest(): void
+    {
+        // Verificar que todas las preguntas fueron respondidas
+        if (count($this->answers) < $this->questions->count()) {
+            session()->flash('error', 'Por favor, responde todas las preguntas antes de finalizar.');
+            return;
         }
+
+        $this->completeTest();
     }
 
     /**

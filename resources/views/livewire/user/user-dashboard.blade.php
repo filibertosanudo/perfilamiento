@@ -1,9 +1,18 @@
 <div class="space-y-6">
     
     {{-- Header --}}
-    <div>
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">Mi Panel Personal</h1>
-        <p class="text-gray-500">Bienvenido {{ auth()->user()->first_name }}, aquí puedes ver tus evaluaciones y resultados</p>
+    <div x-data="{ 
+        getGreeting() {
+            const hour = new Date().getHours();
+            if (hour < 12) return 'Buenos días';
+            if (hour < 19) return 'Buenas tardes';
+            return 'Buenas noches';
+        }
+    }">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">
+            <span x-text="getGreeting()"></span>, {{ auth()->user()->first_name }}
+        </h1>
+        <p class="text-gray-500">{{ $motivationalQuote }}</p>
     </div>
 
     {{-- Stats Cards --}}
@@ -76,7 +85,7 @@
         <h2 class="text-xl font-bold text-gray-900">Mis Resultados</h2>
         <div class="flex gap-2">
             {{-- PDF de Historial --}}
-            <a href="{{ route('pdf.user-history') }}" 
+            <a href="{{ route('pdf.user-history') }}" target="_blank"
             class="inline-flex items-center gap-2 border border-gray-300 hover:border-teal-600 hover:text-teal-600 px-4 py-2 rounded-lg text-sm transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -86,7 +95,7 @@
 
             {{-- PDF Integral (solo si tiene 3+ tests) --}}
             @if($completedTestsCount >= 3)
-                <a href="{{ route('pdf.user-integral') }}" 
+                <a href="{{ route('pdf.user-integral') }}" target="_blank"
                 class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
@@ -247,9 +256,9 @@
                             <span class="text-sm font-medium text-{{ $color }}-700 mr-3">
                                 {{ ucfirst($response->result_category ?? 'Normal') }}
                             </span>
-                            <a href="{{ route('results.show', $response->id) }}" class="text-sm text-gray-600 hover:text-gray-900 hover:underline">
+                            <button wire:click="showResultDetails({{ $response->id }})" class="text-sm text-gray-600 hover:text-gray-900 hover:underline">
                                 Ver Resultados
-                            </a>
+                            </button>
                         </div>
                     </div>
                 @endforeach
@@ -257,4 +266,87 @@
         </div>
     @endif
 
+    {{-- Detail Modal --}}
+    @if($showDetailModal && $selectedResult)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col max-h-[90vh]" x-data @keydown.escape.window="$wire.closeModal()">
+                
+                {{-- Modal Header --}}
+                @php
+                    $categoryColors = [
+                        'mínima' => 'emerald',
+                        'leve' => 'blue',
+                        'moderada' => 'amber',
+                        'severa' => 'red',
+                        'normal' => 'emerald',
+                        'baja' => 'amber',
+                        'alta' => 'emerald',
+                    ];
+                    $category = strtolower($selectedResult->result_category ?? 'normal');
+                    $badgeColor = 'gray';
+                    foreach ($categoryColors as $key => $color) {
+                        if (str_contains($category, $key)) {
+                            $badgeColor = $color;
+                            break;
+                        }
+                    }
+                @endphp
+                <div class="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4 rounded-t-2xl text-white flex justify-between items-start shrink-0">
+                    <div>
+                        <h2 class="text-xl font-bold mb-1">{{ $selectedResult->assignment->test->name }}</h2>
+                        <div class="flex items-center gap-3 text-teal-100 text-sm">
+                            <span>Puntaje: {{ $selectedResult->numeric_result }} / {{ $selectedResult->assignment->test->max_score }}</span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-{{ $badgeColor }}-100 text-{{ $badgeColor }}-700">
+                                {{ ucfirst($selectedResult->result_category) }}
+                            </span>
+                        </div>
+                    </div>
+                    <button wire:click="closeModal" class="p-2 rounded-lg hover:bg-white/20 text-white transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                {{-- Modal Body (Scrollable) --}}
+                <div class="p-6 overflow-y-auto space-y-4 flex-1">
+                    @foreach($selectedDetails as $index => $detail)
+                        <div class="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
+                            <div class="flex items-start gap-3">
+                                <div class="w-7 h-7 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                                    {{ $index + 1 }}
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="text-sm font-medium text-gray-900 mb-2">
+                                        {{ $detail->question->text }}
+                                    </h4>
+                                    <div class="bg-teal-50 border border-teal-200 rounded-lg p-3 flex justify-between items-center">
+                                        <div class="flex items-center gap-2">
+                                            <svg class="w-4 h-4 text-teal-600" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                            </svg>
+                                            <span class="text-sm font-medium text-teal-900">
+                                                {{ $detail->answerOption->text }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                {{-- Modal Footer --}}
+                <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/40 rounded-b-2xl shrink-0 flex justify-between items-center">
+                    <a href="{{ route('results.show', $selectedResult->id) }}" class="text-sm text-teal-600 hover:text-teal-700 font-medium hover:underline">
+                        Ver análisis completo
+                    </a>
+                    <button wire:click="closeModal" class="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg font-medium transition-colors">
+                        Cerrar
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    @endif
 </div>

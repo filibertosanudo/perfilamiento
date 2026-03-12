@@ -5,11 +5,16 @@ namespace App\Livewire\User;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\TestResponse;
+use App\Models\ResponseDetail;
 use Illuminate\Support\Collection;
 
 class MyResults extends Component
 {
     use WithPagination;
+
+    public bool $showDetailModal = false;
+    public ?TestResponse $selectedResult = null;
+    public $selectedDetails = [];
 
     public string $search = '';
     public string $filterCategory = ''; // Filtrar por categoría de resultado
@@ -85,5 +90,31 @@ class MyResults extends Component
             'this_year' => $thisYear->count(),
             'avg_score' => round($allResults->avg('numeric_result'), 1),
         ];
+    }
+
+    public function showResultDetails(int $responseId)
+    {
+        $this->selectedResult = TestResponse::with([
+            'assignment.test',
+            'assignment.assignedBy'
+        ])->findOrFail($responseId);
+
+        // Security check
+        if ($this->selectedResult->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $this->selectedDetails = ResponseDetail::where('test_response_id', $responseId)
+            ->with(['question', 'answerOption'])
+            ->get();
+
+        $this->showDetailModal = true;
+    }
+
+    public function closeModal()
+    {
+        $this->showDetailModal = false;
+        $this->selectedResult = null;
+        $this->selectedDetails = [];
     }
 }

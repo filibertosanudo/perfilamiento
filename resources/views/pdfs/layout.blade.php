@@ -200,7 +200,7 @@
                 <div class="system-name">Sistema de Perfilamiento de Bienestar Integral</div>
             </div>
             <div class="header-info">
-                <div>{{ $area ?? 'Área' }}</div>
+                <div>{{ $institution ?? 'Área' }}</div>
                 <div>Generado: {{ now()->format('d/m/Y H:i') }}</div>
             </div>
         </div>

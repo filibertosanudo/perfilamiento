@@ -185,7 +185,7 @@
                                 class="w-full text-left p-4 border-2 rounded-lg transition-all hover:border-teal-500 hover:bg-teal-50
                                     {{ $isSelected ? 'border-teal-600 bg-teal-50' : 'border-gray-200 bg-white' }}">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0
+                                    <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors
                                         {{ $isSelected ? 'border-teal-600 bg-teal-600' : 'border-gray-300' }}">
                                         @if($isSelected)
                                             <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -231,9 +231,15 @@
                                 </svg>
                             </button>
                         @else
-                            <span class="text-sm text-green-600 font-medium">
-                                ✓ Última pregunta respondida - Finalizando...
-                            </span>
+                            <button wire:click="finishTest"
+                                wire:loading.attr="disabled"
+                                class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2 rounded-lg transition-colors flex items-center gap-2 shadow-sm">
+                                <span wire:loading.remove wire:target="finishTest">Finalizar Test</span>
+                                <span wire:loading wire:target="finishTest">Procesando...</span>
+                                <svg wire:loading.remove wire:target="finishTest" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M5 12l5 5L20 7"/>
+                                </svg>
+                            </button>
                         @endif
                     @else
                         <span class="text-sm text-gray-400">Selecciona una opción para continuar</span>
