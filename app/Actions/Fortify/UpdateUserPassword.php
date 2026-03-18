@@ -25,7 +25,8 @@ class UpdateUserPassword implements UpdatesUserPasswords
             'password' => ['required', 'string', new SecurePassword(), 'confirmed'],
             
         ], [
-            'current_password.current_password' => __('The provided password does not match your current password.'),
+            'current_password.current_password' => __('La contraseña proporcionada no coincide con tu contraseña actual.'),
+            'password.confirmed' => __('La confirmación de la contraseña no coincide.'),
         ])->validateWithBag('updatePassword');
 
         $user->forceFill([
