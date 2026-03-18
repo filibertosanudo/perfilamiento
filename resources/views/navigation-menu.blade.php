@@ -15,6 +15,25 @@
                     <x-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+
+                    @if(auth()->user()?->role_id === 1)
+                        <x-nav-link href="{{ route('admin.users') }}" :active="request()->routeIs('admin.users')">
+                            {{ __('Usuarios') }}
+                        </x-nav-link>
+                        <x-nav-link href="{{ route('admin.areas') }}" :active="request()->routeIs('admin.areas')">
+                            {{ __('Áreas') }}
+                        </x-nav-link>
+                        <x-nav-link href="{{ route('grupos.index') }}" :active="request()->routeIs('grupos.index')">
+                            {{ __('Grupos') }}
+                        </x-nav-link>
+                    @elseif(auth()->user()?->role_id === 2)
+                        <x-nav-link href="{{ route('grupos.index') }}" :active="request()->routeIs('grupos.index')">
+                            {{ __('Grupos') }}
+                        </x-nav-link>
+                        <x-nav-link href="{{ route('advisor.results') }}" :active="request()->routeIs('advisor.results*')">
+                            {{ __('Resultados') }}
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -142,6 +161,25 @@
             <x-responsive-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+
+            @if(auth()->user()?->role_id === 1)
+                <x-responsive-nav-link href="{{ route('admin.users') }}" :active="request()->routeIs('admin.users')">
+                    {{ __('Usuarios') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link href="{{ route('admin.areas') }}" :active="request()->routeIs('admin.areas')">
+                    {{ __('Áreas') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link href="{{ route('grupos.index') }}" :active="request()->routeIs('grupos.index')">
+                    {{ __('Grupos') }}
+                </x-responsive-nav-link>
+            @elseif(auth()->user()?->role_id === 2)
+                <x-responsive-nav-link href="{{ route('grupos.index') }}" :active="request()->routeIs('grupos.index')">
+                    {{ __('Grupos') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link href="{{ route('advisor.results') }}" :active="request()->routeIs('advisor.results*')">
+                    {{ __('Resultados') }}
+                </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->

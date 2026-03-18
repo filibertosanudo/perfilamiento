@@ -16,9 +16,9 @@ return new class extends Migration
                 ->cascadeOnUpdate()
                 ->restrictOnDelete();
 
-            $table->foreignId('institution_id')
+            $table->foreignId('area_id')
                 ->nullable()
-                ->constrained('institutions')
+                ->constrained('areas')
                 ->nullOnDelete();
 
             $table->string('first_name', 100);
@@ -50,7 +50,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index('registered_at',  'idx_users_registered_at');
-            $table->index('institution_id', 'idx_users_institution');
+            $table->index('area_id', 'idx_users_area');
             $table->index('role_id',        'idx_users_role');
         });
 

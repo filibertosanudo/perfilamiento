@@ -31,9 +31,9 @@ return new class extends Migration
                 ->constrained('groups')
                 ->cascadeOnDelete();
 
-            $table->foreignId('institution_id')
+            $table->foreignId('area_id')
                 ->nullable()
-                ->constrained('institutions')
+                ->constrained('areas')
                 ->cascadeOnDelete();
 
             $table->timestamp('assigned_at')->useCurrent();
@@ -43,7 +43,7 @@ return new class extends Migration
 
             $table->index(['test_id', 'user_id'],        'idx_ta_test_user');
             $table->index(['test_id', 'group_id'],       'idx_ta_test_group');
-            $table->index(['test_id', 'institution_id'], 'idx_ta_test_inst');
+            $table->index(['test_id', 'area_id'], 'idx_ta_test_area');
             $table->index('assigned_by',                 'idx_ta_assigned_by');
         });
     }

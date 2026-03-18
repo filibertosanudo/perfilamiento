@@ -13,7 +13,7 @@
 
             // Icon Definitions (SVG Paths)
             $icons = [
-                'dashboard' => 'M3 3h7v7H3V3zm11 0h7v7h-7V3zm0 11h7v7h-7v-7zM3 14h7v7H3v-7z',
+                'dashboard' => 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
                 'users' => 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m8-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm8 10v-2a4 4 0 0 0-3-3.87m-4-12a4 4 0 0 1 0 7.75',
                 'groups' => 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm13 14v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75', // Users con variante
                 'user-cog' => 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m8-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm10.9 2.45l-1.35.45c-.1.35-.25.7-.45 1l-1.35-.15a1.5 1.5 0 0 0-1.75 1.1l-.15 1.35c-.35.2-.7.35-1.05.45l-.45-1.35a1.5 1.5 0 0 0-2.3 0l-.45 1.35c-.35-.1-.7-.25-1.05-.45l-.15-1.35a1.5 1.5 0 0 0-1.75-1.1l-1.35.15c-.2-.3-.35-.65-.45-1l1.35-.45a1.5 1.5 0 0 0 0-2.3l-1.35-.45c.1-.35.25-.7.45-1l1.35.15a1.5 1.5 0 0 0 1.75-1.1l.15-1.35c.35-.2.7-.35 1.05-.45l.45 1.35a1.5 1.5 0 0 0 2.3 0l.45-1.35c.35.1.7.25 1.05.45l.15 1.35a1.5 1.5 0 0 0 1.75 1.1l1.35-.15c.2.3.35.65.45 1l-1.35.45a1.5 1.5 0 0 0 0 2.3z',
@@ -30,8 +30,9 @@
                     ['id' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'dashboard', 'route' => 'dashboard'],
                     ['id' => 'usuarios', 'label' => 'Gestión de Usuarios', 'icon' => 'users', 'route' => 'admin.users'],
                     ['id' => 'grupos', 'label' => 'Gestión de Grupos', 'icon' => 'groups', 'route' => 'grupos.index'],
-                    ['id' => 'instituciones', 'label' => 'Instituciones', 'icon' => 'user-cog', 'route' => 'admin.instituciones'],
-                    ['id' => 'reportes', 'label' => 'Reportes Generales', 'icon' => 'chart', 'route' => 'admin.reportes'],
+                    ['id' => 'areas', 'label' => 'Gestión de Áreas', 'icon' => 'user-cog', 'route' => 'admin.areas'],
+                    ['id' => 'tests', 'label' => 'Asignar Tests', 'icon' => 'clipboard', 'route' => 'tests.assignments'],
+                    ['id' => 'resultados', 'label' => 'Resultados', 'icon' => 'file-text', 'route' => 'advisor.results'],
                     ['id' => 'configuracion', 'label' => 'Configuración', 'icon' => 'settings', 'route' => 'admin.configuracion'],
                 ];
             } elseif ($role == 2) { // Orientador
@@ -39,16 +40,15 @@
                     ['id' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'dashboard', 'route' => 'dashboard'],
                     ['id' => 'grupos', 'label' => 'Mis Grupos', 'icon' => 'groups', 'route' => 'grupos.index'],
                     ['id' => 'usuarios', 'label' => 'Mis Usuarios', 'icon' => 'users', 'route' => 'orientador.users'],
-                    ['id' => 'asignar-tests', 'label' => 'Asignar Tests', 'icon' => 'clipboard', 'route' => 'orientador.asignar-tests'],
-                    ['id' => 'resultados', 'label' => 'Resultados', 'icon' => 'file-text', 'route' => 'orientador.resultados'],
+                    ['id' => 'tests', 'label' => 'Asignar Tests', 'icon' => 'clipboard', 'route' => 'tests.assignments'],
+                    ['id' => 'resultados', 'label' => 'Resultados', 'icon' => 'file-text', 'route' => 'advisor.results'],
                     ['id' => 'estadisticas', 'label' => 'Estadísticas', 'icon' => 'chart', 'route' => 'orientador.estadisticas'],
                 ];
             } else { // Usuario
                 $menuItems = [
                     ['id' => 'dashboard', 'label' => 'Mi Dashboard', 'icon' => 'dashboard', 'route' => 'dashboard'],
-                    ['id' => 'mis-tests', 'label' => 'Mis Tests', 'icon' => 'clipboard', 'route' => 'usuario.mis-tests'],
-                    ['id' => 'mis-resultados', 'label' => 'Mis Resultados', 'icon' => 'file-text', 'route' => 'usuario.mis-resultados'],
-                    ['id' => 'perfil', 'label' => 'Mi Perfil', 'icon' => 'user', 'route' => 'usuario.perfil'],
+                    ['id' => 'mis-resultados', 'label' => 'Mis Resultados', 'icon' => 'file-text', 'route' => 'results.index'],
+                    // ['id' => 'perfil', 'label' => 'Mi Perfil', 'icon' => 'user', 'route' => 'profile.show'],
                 ];
             }
         @endphp

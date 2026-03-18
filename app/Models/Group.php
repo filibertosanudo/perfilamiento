@@ -12,7 +12,7 @@ class Group extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'institution_id',
+        'area_id',
         'creator_id',
         'name',
         'description',
@@ -25,11 +25,11 @@ class Group extends Model
     ];
 
     /**
-     * Institución a la que pertenece este grupo (obligatorio)
+     * Área a la que pertenece este grupo (obligatorio)
      */
-    public function institution(): BelongsTo
+    public function area(): BelongsTo
     {
-        return $this->belongsTo(Institution::class);
+        return $this->belongsTo(Area::class);
     }
 
     /**

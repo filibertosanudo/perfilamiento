@@ -28,7 +28,7 @@
 
             <div class="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
                 
-                <x-header :title="$title ?? 'Panel de Control'" />
+                <x-header :title="$header ?? 'Panel de Control'" />
 
                 <main class="p-6">
                     {{ $slot }}
@@ -36,6 +36,7 @@
             </div>
         </div>
 
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
         @stack('modals')
         @livewireScripts
 

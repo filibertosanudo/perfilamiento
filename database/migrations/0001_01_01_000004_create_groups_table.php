@@ -11,9 +11,9 @@ return new class extends Migration
         Schema::create('groups', function (Blueprint $table) {
             $table->id();
 
-            // Todo grupo pertenece a una institución
-            $table->foreignId('institution_id')
-                ->constrained('institutions')
+            // Todo grupo pertenece a una área
+            $table->foreignId('area_id')
+                ->constrained('areas')
                 ->restrictOnDelete();
 
             // El orientador que administra este grupo
@@ -26,7 +26,7 @@ return new class extends Migration
             $table->boolean('active')->default(true);
             $table->timestamp('created_at')->useCurrent();
 
-            $table->index('institution_id', 'idx_groups_institution');
+            $table->index('area_id', 'idx_groups_area');
             $table->index('creator_id',     'idx_groups_creator');
         });
 

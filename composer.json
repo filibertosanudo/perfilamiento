@@ -11,7 +11,8 @@
         "laravel/jetstream": "^5.4",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
-        "livewire/livewire": "^3.6.4"
+        "livewire/livewire": "^3.6.4",
+        "spatie/browsershot": "^5.2"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -27,7 +28,10 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        },
+        "files": [
+            "app/Helpers/NotificationHelper.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

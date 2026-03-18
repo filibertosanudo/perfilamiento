@@ -1,13 +1,5 @@
 <div class="space-y-6">
 
-    {{-- Header --}}
-    <div>
-        <h3 class="text-lg font-semibold text-gray-900">Sesiones Activas</h3>
-        <p class="mt-1 text-sm text-gray-600">
-            Administra y cierra sesión en tus dispositivos activos.
-        </p>
-    </div>
-
     {{-- Flash Message --}}
     @if (session()->has('message'))
         <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
@@ -53,12 +45,13 @@
 
                     {{-- Info de la sesión --}}
                     <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 mb-1">
-                            <p class="text-sm font-semibold text-gray-900">
+                        <div class="flex items-center gap-2 mb-1 w-full">
+                            <p class="text-xs font-semibold text-gray-900 truncate">
                                 {{ $session['user_agent'] }}
                             </p>
+                            
                             @if($session['is_current'])
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-700 ring-1 ring-teal-200">
+                                <span class="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-700 ring-1 ring-teal-200">
                                     Sesión actual
                                 </span>
                             @endif

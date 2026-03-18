@@ -7,7 +7,7 @@ use Livewire\WithPagination;
 use Livewire\Attributes\Renderless;
 use App\Models\Group;
 use App\Models\User;
-use App\Models\Institution;
+use App\Models\Area;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use App\Helpers\SecurityLog;
 use Illuminate\Database\Eloquent\Builder;
@@ -34,7 +34,8 @@ class GroupManagement extends Component
     public ?int $groupId = null;
     public string $name = '';
     public string $description = '';
-    public ?int $institution_id = null;
+    public ?int $area_id = null;
+    public ?int $creator_id = null;
     public int $active = 1;
 
     // Modal de gestión de miembros
@@ -52,6 +53,15 @@ class GroupManagement extends Component
     // Reset paginación
     public function updatingSearch(): void { $this->resetPage(); }
     public function updatingShowInactive(): void { $this->resetPage(); }
+
+    // Actualizar lista de orientadores cuando cambia el área
+    public function updatedAreaId(): void
+    {
+        // Si es admin y cambió el área, resetear el orientador seleccionado
+        if (auth()->user()->role_id === 1) {
+            $this->creator_id = null;
+        }
+    }
 
     // Ordenamiento
     public function sortBy(string $field): void
@@ -89,9 +99,10 @@ class GroupManagement extends Component
         $this->resetInputFields();
         $this->isViewMode = false;
 
-        // Pre-seleccionar institución del orientador
+        // Pre-seleccionar área y orientador según el rol
         if (auth()->user()->role_id === 2) {
-            $this->institution_id = auth()->user()->institution_id;
+            $this->area_id = auth()->user()->area_id;
+            $this->creator_id = auth()->id();
         }
 
         $this->openModal();
@@ -105,7 +116,8 @@ class GroupManagement extends Component
         $this->groupId = $group->id;
         $this->name = $group->name;
         $this->description = $group->description ?? '';
-        $this->institution_id = $group->institution_id;
+        $this->area_id = $group->area_id;
+        $this->creator_id = $group->creator_id;
         $this->active = $group->active ? 1 : 0;
         $this->isViewMode = false;
 
@@ -132,13 +144,16 @@ class GroupManagement extends Component
         $this->validate([
             'name' => 'required|string|min:3|max:150',
             'description' => 'nullable|string|max:500',
-            'institution_id' => 'required|exists:institutions,id',
+            'area_id' => 'required|exists:areas,id',
+            'creator_id' => 'required|exists:users,id',
             'active' => 'required|boolean',
         ], [
             'name.required' => 'El nombre del grupo es obligatorio.',
             'name.min' => 'El nombre debe tener al menos 3 caracteres.',
-            'institution_id.required' => 'Debes seleccionar una institución.',
-            'institution_id.exists' => 'La institución seleccionada no es válida.',
+            'area_id.required' => 'Debes seleccionar un área.',
+            'area_id.exists' => 'El área seleccionada no es válida.',
+            'creator_id.required' => 'Debes seleccionar un orientador.',
+            'creator_id.exists' => 'El orientador seleccionado no es válido.',
         ]);
 
         $isNew = !$this->groupId;
@@ -148,8 +163,8 @@ class GroupManagement extends Component
             [
                 'name' => trim($this->name),
                 'description' => $this->description ? trim($this->description) : null,
-                'institution_id' => $this->institution_id,
-                'creator_id' => $isNew ? auth()->id() : Group::find($this->groupId)->creator_id,
+                'area_id' => $this->area_id,
+                'creator_id' => $this->creator_id,
                 'active' => $this->active,
                 'created_at' => $isNew ? now() : Group::find($this->groupId)->created_at,
             ]
@@ -159,15 +174,17 @@ class GroupManagement extends Component
             \Log::info('Grupo creado', [
                 'group_id' => $group->id,
                 'group_name' => $group->name,
-                'creator_id' => auth()->id(),
-                'creator_email' => auth()->user()->email,
-                'institution_id' => $group->institution_id,
+                'creator_id' => $group->creator_id,
+                'created_by_admin' => auth()->id(),
+                'created_by_email' => auth()->user()->email,
+                'area_id' => $group->area_id,
             ]);
             $message = 'Grupo creado exitosamente.';
         } else {
             \Log::info('Grupo actualizado', [
                 'group_id' => $group->id,
                 'group_name' => $group->name,
+                'creator_id' => $group->creator_id,
                 'updated_by' => auth()->id(),
                 'updated_by_email' => auth()->user()->email,
             ]);
@@ -261,7 +278,6 @@ class GroupManagement extends Component
         }
         $group->users()->sync($syncData);
 
-        // Log de cambios
         if (!empty($added) || !empty($removed)) {
             \Log::info('Miembros del grupo actualizados', [
                 'group_id' => $group->id,
@@ -284,7 +300,7 @@ class GroupManagement extends Component
         $currentUser = auth()->user();
         $search = $this->search;
 
-        $query = Group::with(['institution', 'creator', 'users'])
+        $query = Group::with(['area', 'creator', 'users'])
             ->when(!$this->showInactive, fn ($q) => $q->where('active', true))
             ->when($currentUser->role_id === 2, fn ($q) => $q->where('creator_id', $currentUser->id))
             ->when($search, fn ($q) => $this->applySearch($q, $search));
@@ -293,17 +309,16 @@ class GroupManagement extends Component
             ->orderBy($this->sortField, $this->sortDirection)
             ->paginate(10);
 
-        // Instituciones disponibles
-        $institutions = $this->getAvailableInstitutions($currentUser);
-
-        // Usuarios disponibles para el modal de miembros
+        $areas = $this->getAvailableAreas($currentUser);
         $availableUsers = $this->getAvailableUsers($currentUser);
+        $advisors = $this->getAvailableAdvisors($currentUser);
 
         return view('livewire.admin.group-management', [
             'groups' => $groups,
             'totalGroups' => $this->getTotalGroups($currentUser),
-            'institutions' => $institutions,
+            'areas' => $areas,
             'availableUsers' => $availableUsers,
+            'advisors' => $advisors,
         ]);
     }
 
@@ -314,19 +329,47 @@ class GroupManagement extends Component
         $query->where(function ($q) use ($search) {
             $q->where('name', 'like', "%{$search}%")
               ->orWhere('description', 'like', "%{$search}%")
-              ->orWhereHas('institution', function ($q) use ($search) {
+              ->orWhereHas('area', function ($q) use ($search) {
                   $q->where('name', 'like', "%{$search}%");
               });
         });
     }
 
-    private function getAvailableInstitutions(User $currentUser): Collection
+    private function getAvailableAreas(User $currentUser): Collection
     {
         return $currentUser->role_id === 1
-            ? Institution::where('active', true)->orderBy('name')->get()
-            : Institution::where('id', $currentUser->institution_id)
+            ? Area::where('active', true)->orderBy('name')->get()
+            : Area::where('id', $currentUser->area_id)
                 ->where('active', true)
                 ->get();
+    }
+
+    /**
+     * Obtiene orientadores disponibles según el contexto
+     */
+    private function getAvailableAdvisors(User $currentUser): Collection
+    {
+        // Si no está en el modal, no cargar orientadores
+        if (!$this->isOpen) {
+            return collect();
+        }
+
+        // Si es orientador, no necesita selector
+        if ($currentUser->role_id === 2) {
+            return collect();
+        }
+
+        // Si es admin sin área seleccionada, no mostrar orientadores
+        if (!$this->area_id) {
+            return collect();
+        }
+
+        // Admin: Obtener orientadores del área seleccionada
+        return User::where('role_id', 2)
+            ->where('area_id', $this->area_id)
+            ->where('active', true)
+            ->orderBy('first_name')
+            ->get();
     }
 
     private function getTotalGroups(User $currentUser): int
@@ -347,8 +390,8 @@ class GroupManagement extends Component
             return collect();
         }
 
-        // Usuarios de la misma institución, role_id = 3
-        $query = User::where('institution_id', $group->institution_id)
+        // Usuarios del misma área, role_id = 3
+        $query = User::where('area_id', $group->area_id)
             ->where('role_id', 3)
             ->where('active', true);
 
@@ -370,7 +413,8 @@ class GroupManagement extends Component
         $this->groupId = null;
         $this->name = '';
         $this->description = '';
-        $this->institution_id = null;
+        $this->area_id = null;
+        $this->creator_id = null;
         $this->active = 1;
         $this->resetValidation();
     }

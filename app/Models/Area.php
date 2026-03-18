@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Institution extends Model
+class Area extends Model
 {
     protected $fillable = [
         'name',
@@ -21,7 +21,7 @@ class Institution extends Model
     ];
 
     /**
-     * Todos los usuarios de esta institución (cualquier rol)
+     * Todos los usuarios de esta área (cualquier rol)
      */
     public function users(): HasMany
     {
@@ -29,7 +29,7 @@ class Institution extends Model
     }
 
     /**
-     * Solo los orientadores de esta institución (role_id = 2)
+     * Solo los orientadores de esta área (role_id = 2)
      */
     public function advisors(): HasMany
     {
@@ -37,7 +37,7 @@ class Institution extends Model
     }
 
     /**
-     * Grupos que pertenecen a esta institución
+     * Grupos que pertenecen a esta área
      */
     public function groups(): HasMany
     {
@@ -45,7 +45,7 @@ class Institution extends Model
     }
 
     /**
-     * Asignaciones de tests hechas a nivel institución completa
+     * Asignaciones de tests hechas a nivel de área completa
      */
     public function testAssignments(): HasMany
     {
