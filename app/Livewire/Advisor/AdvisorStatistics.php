@@ -66,6 +66,7 @@ class AdvisorStatistics extends Component
             'quarter' => now()->subMonths(3),
             'semester' => now()->subMonths(6),
             'year' => now()->subYear(),
+            'all' => Carbon::parse('2000-01-01'), // Prácticamente todo
             default => now()->subMonth(),
         };
 
@@ -155,6 +156,7 @@ class AdvisorStatistics extends Component
             'quarter' => 3,    // 3 meses
             'semester' => 6,   // 6 meses
             'year' => 12,      // 12 meses
+            'all' => 12,       // Mostrar últimos 12 meses en "Todo el tiempo"
             default => 6,
         };
 
@@ -242,21 +244,20 @@ class AdvisorStatistics extends Component
     {
         [$startDate, $endDate] = $this->getDateRange();
 
+        // Tests completados (Global para mis usuarios)
         $totalCompleted = TestResponse::whereIn('user_id', $userIds)
             ->where('completed', true)
-            ->whereBetween('finished_at', [$startDate, $endDate])
             ->count();
 
-        $thisMonth = TestResponse::whereIn('user_id', $userIds)
+        // Completados en el periodo (Sub-stat)
+        $thisPeriod = TestResponse::whereIn('user_id', $userIds)
             ->where('completed', true)
-            ->whereMonth('finished_at', now()->month)
-            ->whereYear('finished_at', now()->year)
+            ->whereBetween('finished_at', [$startDate, $endDate])
             ->count();
 
         // Calcular tiempo promedio correctamente (solo respuestas con ambas fechas)
         $avgTime = TestResponse::whereIn('user_id', $userIds)
             ->where('completed', true)
-            ->whereBetween('finished_at', [$startDate, $endDate])
             ->whereNotNull('started_at')
             ->whereNotNull('finished_at')
             ->get()
@@ -269,10 +270,9 @@ class AdvisorStatistics extends Component
                 return $response->started_at->diffInMinutes($response->finished_at);
             });
 
-        // Total de asignaciones activas del orientador en el período
+        // Total de asignaciones activas del orientador (Global)
         $totalAssignments = TestAssignment::where('assigned_by', auth()->id())
             ->where('active', true)
-            ->whereBetween('assigned_at', [$startDate, $endDate])
             ->count();
 
         $completionRate = $totalAssignments > 0 
@@ -281,7 +281,7 @@ class AdvisorStatistics extends Component
 
         return [
             'total_completed' => $totalCompleted,
-            'this_month' => $thisMonth,
+            'this_period' => $thisPeriod,
             'avg_time' => round($avgTime ?? 0),
             'completion_rate' => $completionRate,
             'active_users' => count($userIds),

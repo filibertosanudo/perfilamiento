@@ -236,7 +236,7 @@
 
         {{-- Paginación --}}
         <div class="px-6 py-3 border-t border-gray-100 bg-gray-50/40">
-            {{ $results->links() }}
+            {{ $results->links('vendor.pagination.tailwind') }}
         </div>
     </div>
 
