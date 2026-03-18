@@ -31,9 +31,9 @@
                     ['id' => 'usuarios', 'label' => 'Gestión de Usuarios', 'icon' => 'users', 'route' => 'admin.users'],
                     ['id' => 'grupos', 'label' => 'Gestión de Grupos', 'icon' => 'groups', 'route' => 'grupos.index'],
                     ['id' => 'areas', 'label' => 'Gestión de Áreas', 'icon' => 'user-cog', 'route' => 'admin.areas'],
+                    ['id' => 'gestion-tests', 'label' => 'Gestión de Tests', 'icon' => 'clipboard', 'route' => 'admin.tests'],
                     ['id' => 'tests', 'label' => 'Asignar Tests', 'icon' => 'clipboard', 'route' => 'tests.assignments'],
                     ['id' => 'resultados', 'label' => 'Resultados', 'icon' => 'file-text', 'route' => 'advisor.results'],
-                    ['id' => 'configuracion', 'label' => 'Configuración', 'icon' => 'settings', 'route' => 'admin.configuracion'],
                 ];
             } elseif ($role == 2) { // Orientador
                 $menuItems = [
