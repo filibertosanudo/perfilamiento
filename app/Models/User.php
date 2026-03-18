@@ -67,6 +67,14 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * Get the user's full name.
+     */
+    public function getNameAttribute(): string
+    {
+        return trim("{$this->first_name} {$this->last_name} {$this->second_last_name}");
+    }
+
     // Helper para verificar si ya aceptó la invitación
     public function hasAcceptedInvitation(): bool
     {

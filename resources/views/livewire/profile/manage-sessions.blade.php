@@ -2,174 +2,149 @@
 
     {{-- Flash Message --}}
     @if (session()->has('message'))
-        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                <path d="m9 11 3 3L22 4"/>
-            </svg>
+        <div class="bg-teal-50 border border-teal-100 text-teal-700 px-4 py-3 rounded-xl text-sm font-bold flex items-center gap-3 shadow-sm animate-fade-in">
+            <div class="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm">
+                <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
             {{ session('message') }}
         </div>
     @endif
 
-    {{-- Lista de sesiones --}}
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div class="divide-y divide-gray-100">
+    {{-- Sessions List --}}
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="divide-y divide-gray-50">
             @forelse($sessions as $session)
-                <div class="p-4 flex items-start gap-4 hover:bg-gray-50 transition-colors">
-                    {{-- Ícono de dispositivo --}}
+                <div class="p-5 flex items-start gap-5 hover:bg-gray-50/50 transition-all duration-200">
+                    {{-- Device Icon --}}
                     <div class="shrink-0">
-                        @if(str_contains($session['user_agent'], 'Windows') || str_contains($session['user_agent'], 'Mac') || str_contains($session['user_agent'], 'Linux'))
-                            {{-- Desktop --}}
-                            <div class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" 
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                    class="text-gray-600">
-                                    <rect x="2" y="3" width="20" height="14" rx="2"/>
-                                    <line x1="8" y1="21" x2="16" y2="21"/>
-                                    <line x1="12" y1="17" x2="12" y2="21"/>
+                        @php
+                            $isDesktop = str_contains($session['user_agent'], 'Windows') || 
+                                         str_contains($session['user_agent'], 'Mac') || 
+                                         str_contains($session['user_agent'], 'Linux');
+                        @endphp
+                        <div class="w-14 h-14 rounded-2xl {{ $session['is_current'] ? 'bg-teal-50 text-teal-600 ring-4 ring-teal-50/50' : 'bg-gray-50 text-gray-400' }} flex items-center justify-center shadow-sm border border-white">
+                            @if($isDesktop)
+                                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                                 </svg>
-                            </div>
-                        @else
-                            {{-- Mobile --}}
-                            <div class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" 
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                    class="text-gray-600">
-                                    <rect x="5" y="2" width="14" height="20" rx="2"/>
-                                    <line x1="12" y1="18" x2="12.01" y2="18"/>
+                            @else
+                                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                                 </svg>
-                            </div>
-                        @endif
+                            @endif
+                        </div>
                     </div>
 
-                    {{-- Info de la sesión --}}
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 mb-1 w-full">
-                            <p class="text-xs font-semibold text-gray-900 truncate">
+                    {{-- Session Info --}}
+                    <div class="flex-1 min-w-0 pt-1">
+                        <div class="flex flex-wrap items-center gap-3 mb-2">
+                            <p class="text-xs font-bold text-gray-900 uppercase tracking-wider truncate max-w-[200px] sm:max-w-md">
                                 {{ $session['user_agent'] }}
                             </p>
                             
                             @if($session['is_current'])
-                                <span class="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-700 ring-1 ring-teal-200">
-                                    Sesión actual
+                                <span class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-teal-600 text-white shadow-sm shadow-teal-500/20">
+                                    Este Dispositivo
                                 </span>
                             @endif
                         </div>
-                        <div class="flex items-center gap-4 text-xs text-gray-500">
-                            <span class="flex items-center gap-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" 
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <line x1="2" y1="12" x2="22" y2="12"/>
-                                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-                                </svg>
+                        <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-[11px] font-medium text-gray-500">
+                            <span class="flex items-center gap-2 px-2 py-1 rounded-lg bg-gray-50 border border-gray-100">
+                                <svg class="w-3.5 h-3.5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 18 0 0118 0z"></path></svg>
                                 {{ $session['ip_address'] }}
                             </span>
-                            <span class="flex items-center gap-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" 
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <polyline points="12 6 12 12 16 14"/>
-                                </svg>
+                            <span class="flex items-center gap-2">
+                                <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 {{ $session['last_active'] }}
                             </span>
                         </div>
                     </div>
                 </div>
             @empty
-                <div class="p-8 text-center text-gray-500">
-                    <p class="text-sm">No hay sesiones activas.</p>
+                <div class="p-12 text-center text-gray-400">
+                    <p class="text-sm font-medium italic">No hay registros de sesiones adicionales.</p>
                 </div>
             @endforelse
         </div>
     </div>
 
-    {{-- Botón de cerrar otras sesiones --}}
+    {{-- Logout Other Devices Button --}}
     @if(count($sessions) > 1)
-        <div class="flex justify-end">
+        <div class="flex justify-end pt-2">
             <button 
                 wire:click="confirmLogoutOtherDevices"
-                class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" 
-                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                    <polyline points="16 17 21 12 16 7"/>
-                    <line x1="21" y1="12" x2="9" y2="12"/>
+                class="inline-flex items-center gap-2.5 px-6 py-2.5 bg-red-50 text-red-600 text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-red-100 transition-all duration-200 active:scale-95 border border-red-100">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
                 </svg>
-                Cerrar sesión en otros dispositivos
+                Cerrar otras sesiones
             </button>
         </div>
     @endif
 
-    {{-- Modal de confirmación de contraseña --}}
+    {{-- Pass Confirmation Modal --}}
     @if($showConfirmPassword)
-        <div class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true">
             <div class="flex items-center justify-center min-h-screen p-4">
                 
                 {{-- Backdrop --}}
-                <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm" wire:click="cancelLogout"></div>
+                <div class="fixed inset-0 bg-gray-900/40 backdrop-blur-md transition-opacity" wire:click="cancelLogout"></div>
 
                 {{-- Modal --}}
-                <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+                <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all animate-modal-pop">
                     
                     {{-- Header --}}
-                    <div class="px-6 py-4 border-b border-gray-100">
-                        <h3 class="text-lg font-semibold text-gray-900">
-                            Confirmar contraseña
+                    <div class="px-8 py-6 border-b border-gray-50 bg-gray-50/30">
+                        <h3 class="text-xl font-black text-gray-900 tracking-tight">
+                            Confirmar Seguridad
                         </h3>
-                        <p class="text-sm text-gray-600 mt-1">
-                            Por seguridad, confirma tu contraseña para continuar.
+                        <p class="text-xs font-medium text-gray-500 mt-1 uppercase tracking-wider">
+                            Protege tu cuenta
                         </p>
                     </div>
 
                     {{-- Body --}}
-                    <div class="px-6 py-5">
-                        <div>
-                            <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-                                Contraseña actual
+                    <div class="px-8 py-8">
+                        <div class="mb-6">
+                            <label for="password" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                                Contraseña Actual
                             </label>
                             <input 
                                 wire:model="password"
                                 type="password" 
                                 id="password"
-                                class="block w-full border border-gray-300 rounded-lg px-3 py-2 shadow-sm focus:ring-teal-500 focus:border-teal-500"
-                                placeholder="Ingresa tu contraseña"
+                                class="block w-full border border-gray-100 rounded-2xl px-5 py-3 text-sm bg-gray-50 focus:bg-white focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all duration-200 shadow-sm"
+                                placeholder="••••••••••••"
                                 autofocus
                             >
                             @error('password')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                <p class="mt-2 text-xs font-bold text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
 
-                        <div class="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                            <div class="flex gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" 
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                    class="text-yellow-600 shrink-0 mt-0.5">
-                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                                    <line x1="12" y1="9" x2="12" y2="13"/>
-                                    <line x1="12" y1="17" x2="12.01" y2="17"/>
-                                </svg>
-                                <p class="text-xs text-yellow-800">
-                                    Esta acción cerrará tu sesión en todos los dispositivos excepto este. 
-                                    Tendrás que volver a iniciar sesión en cada dispositivo.
-                                </p>
+                        <div class="p-4 bg-yellow-50 rounded-2xl border border-yellow-100 flex gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-yellow-100 flex items-center justify-center shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-yellow-600"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
                             </div>
+                            <p class="text-[11px] text-yellow-900 leading-relaxed font-semibold italic">
+                                Se cerrará la sesión en todos los demás dispositivos. Perderás el acceso inmediato en ellos.
+                            </p>
                         </div>
                     </div>
 
                     {{-- Footer --}}
-                    <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-2">
+                    <div class="px-8 py-6 border-t border-gray-50 bg-gray-50/50 flex flex-col sm:flex-row gap-3">
                         <button 
                             wire:click="cancelLogout"
-                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                            Cancelar
+                            class="flex-1 px-6 py-3 text-xs font-bold text-gray-500 hover:bg-gray-100 rounded-2xl transition-all uppercase tracking-widest order-2 sm:order-1">
+                            Volver
                         </button>
                         <button 
                             wire:click="logoutOtherDevices"
-                            class="px-4 py-2 text-sm font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors">
-                            Cerrar otras sesiones
+                            class="flex-1 px-8 py-3 text-xs font-bold text-white bg-red-600 rounded-2xl hover:bg-red-700 transition-all shadow-lg shadow-red-500/20 active:scale-95 order-1 sm:order-2 uppercase tracking-widest">
+                            Confirmar Cierre
                         </button>
                     </div>
                 </div>
