@@ -49,6 +49,24 @@ class Test extends Model
     }
 
     /**
+     * Recomendaciones por rango de puntaje
+     */
+    public function recommendations(): HasMany
+    {
+        return $this->hasMany(TestRecommendation::class)->orderBy('min_range');
+    }
+
+    /**
+     * Verificar si el test tiene respuestas (para prevenir eliminación)
+     */
+    public function getHasResponsesAttribute(): bool
+    {
+        return $this->assignments()
+            ->whereHas('responses')
+            ->exists();
+    }
+
+    /**
      * Puntaje máximo posible del test
      */
     public function getMaxScoreAttribute(): float

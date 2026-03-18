@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TestRecommendation extends Model
 {
+    public $timestamps = false;
+
     protected $fillable = [
         'test_id',
         'min_range',

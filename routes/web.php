@@ -47,6 +47,11 @@ Route::middleware([
             return view('admin.areas');
         })->name('areas');
 
+        // Gestión de Tests
+        Route::get('/tests', function () {
+            return view('admin.tests');
+        })->name('tests');
+
         // Reportes Generales (TODO)
         // Route::get('/reportes', function () {
         //     return view('admin.reports');
