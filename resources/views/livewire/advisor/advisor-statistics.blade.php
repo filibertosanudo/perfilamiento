@@ -13,6 +13,7 @@
                 <option value="quarter">Último trimestre</option>
                 <option value="semester">Último semestre</option>
                 <option value="year">Último año</option>
+                <option value="all">Todo el tiempo</option>
             </select>
             
             {{-- Botón de Exportar PDF --}}
@@ -332,19 +333,19 @@
     {{-- KPI Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-            <p class="text-sm text-gray-500 mb-2">Tasa de Completado</p>
+            <p class="text-sm text-gray-500 mb-2">Tasa de Completado (Global)</p>
             <p class="text-3xl font-bold text-gray-900 mb-2">{{ $generalStats['completion_rate'] }}%</p>
-            <p class="text-xs text-gray-400">De tests asignados</p>
+            <p class="text-xs text-gray-400">Total de tests asignados</p>
         </div>
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
             <p class="text-sm text-gray-500 mb-2">Tiempo Promedio</p>
             <p class="text-3xl font-bold text-gray-900 mb-2">{{ $generalStats['avg_time'] }} min</p>
-            <p class="text-xs text-gray-400">Por evaluación</p>
+            <p class="text-xs text-gray-400">Por evaluación (Global)</p>
         </div>
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
             <p class="text-sm text-gray-500 mb-2">Evaluaciones Completadas</p>
             <p class="text-3xl font-bold text-gray-900 mb-2">{{ $generalStats['total_completed'] }}</p>
-            <p class="text-xs text-emerald-600">+{{ $generalStats['this_month'] }} este mes</p>
+            <p class="text-xs text-emerald-600">+{{ $generalStats['this_period'] }} en este periodo</p>
         </div>
     </div>
 
