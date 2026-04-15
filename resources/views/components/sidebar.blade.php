@@ -29,7 +29,7 @@
                 $menuItems = [
                     ['id' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'dashboard', 'route' => 'dashboard'],
                     ['id' => 'usuarios', 'label' => 'Gestión de Usuarios', 'icon' => 'users', 'route' => 'admin.users'],
-                    ['id' => 'grupos', 'label' => 'Gestión de Grupos', 'icon' => 'groups', 'route' => 'grupos.index'],
+                    ['id' => 'grupos', 'label' => 'Gestión de Grupos', 'icon' => 'groups', 'route' => 'groups.index'],
                     ['id' => 'areas', 'label' => 'Gestión de Áreas', 'icon' => 'user-cog', 'route' => 'admin.areas'],
                     ['id' => 'gestion-tests', 'label' => 'Gestión de Tests', 'icon' => 'clipboard', 'route' => 'admin.tests'],
                     ['id' => 'tests', 'label' => 'Asignar Tests', 'icon' => 'clipboard', 'route' => 'tests.assignments'],
@@ -38,11 +38,11 @@
             } elseif ($role == 2) { // Orientador
                 $menuItems = [
                     ['id' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'dashboard', 'route' => 'dashboard'],
-                    ['id' => 'grupos', 'label' => 'Mis Grupos', 'icon' => 'groups', 'route' => 'grupos.index'],
-                    ['id' => 'usuarios', 'label' => 'Mis Usuarios', 'icon' => 'users', 'route' => 'orientador.users'],
+                    ['id' => 'grupos', 'label' => 'Mis Grupos', 'icon' => 'groups', 'route' => 'groups.index'],
+                    ['id' => 'usuarios', 'label' => 'Mis Usuarios', 'icon' => 'users', 'route' => 'advisor.users'],
                     ['id' => 'tests', 'label' => 'Asignar Tests', 'icon' => 'clipboard', 'route' => 'tests.assignments'],
                     ['id' => 'resultados', 'label' => 'Resultados', 'icon' => 'file-text', 'route' => 'advisor.results'],
-                    ['id' => 'estadisticas', 'label' => 'Estadísticas', 'icon' => 'chart', 'route' => 'orientador.estadisticas'],
+                    ['id' => 'estadisticas', 'label' => 'Estadísticas', 'icon' => 'chart', 'route' => 'advisor.statistics'],
                 ];
             } else { // Usuario
                 $menuItems = [

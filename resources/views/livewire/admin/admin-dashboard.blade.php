@@ -243,7 +243,7 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-700">{{ $advisor->area->name }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">{{ $advisor->area->name ?? 'Sin Área' }}</td>
                             <td class="px-6 py-4 text-center text-sm font-medium text-gray-900">{{ $advisor->groups_count }}</td>
                             <td class="px-6 py-4 text-center text-sm font-medium text-gray-900">{{ $advisor->total_users ?? 0 }}</td>
                             <td class="px-6 py-4 text-center text-sm font-bold text-teal-600">{{ $advisor->assigned_tests_count }}</td>

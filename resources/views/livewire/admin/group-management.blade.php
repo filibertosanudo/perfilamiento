@@ -291,7 +291,7 @@
 
                                 @if($group->active)
                                     {{-- Exportar PDF --}}
-                                    <a href="{{ route('orientador.pdf.group', $group->id) }}"
+                                    <a href="{{ route('advisor.pdf.group', $group->id) }}"
                                         class="p-1.5 hover:bg-teal-50 rounded-lg transition-colors" title="Exportar PDF">
                                         <svg class="text-teal-600" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"

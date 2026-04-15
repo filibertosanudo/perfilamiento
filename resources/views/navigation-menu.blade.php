@@ -23,11 +23,11 @@
                         <x-nav-link href="{{ route('admin.areas') }}" :active="request()->routeIs('admin.areas')">
                             {{ __('Áreas') }}
                         </x-nav-link>
-                        <x-nav-link href="{{ route('grupos.index') }}" :active="request()->routeIs('grupos.index')">
+                        <x-nav-link href="{{ route('groups.index') }}" :active="request()->routeIs('groups.index')">
                             {{ __('Grupos') }}
                         </x-nav-link>
                     @elseif(auth()->user()?->role_id === 2)
-                        <x-nav-link href="{{ route('grupos.index') }}" :active="request()->routeIs('grupos.index')">
+                        <x-nav-link href="{{ route('groups.index') }}" :active="request()->routeIs('groups.index')">
                             {{ __('Grupos') }}
                         </x-nav-link>
                         <x-nav-link href="{{ route('advisor.results') }}" :active="request()->routeIs('advisor.results*')">
@@ -169,11 +169,11 @@
                 <x-responsive-nav-link href="{{ route('admin.areas') }}" :active="request()->routeIs('admin.areas')">
                     {{ __('Áreas') }}
                 </x-responsive-nav-link>
-                <x-responsive-nav-link href="{{ route('grupos.index') }}" :active="request()->routeIs('grupos.index')">
+                <x-responsive-nav-link href="{{ route('groups.index') }}" :active="request()->routeIs('groups.index')">
                     {{ __('Grupos') }}
                 </x-responsive-nav-link>
             @elseif(auth()->user()?->role_id === 2)
-                <x-responsive-nav-link href="{{ route('grupos.index') }}" :active="request()->routeIs('grupos.index')">
+                <x-responsive-nav-link href="{{ route('groups.index') }}" :active="request()->routeIs('groups.index')">
                     {{ __('Grupos') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link href="{{ route('advisor.results') }}" :active="request()->routeIs('advisor.results*')">

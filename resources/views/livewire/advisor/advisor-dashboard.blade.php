@@ -70,7 +70,7 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div class="p-6 border-b border-gray-200 flex justify-between items-center">
             <h3 class="text-lg font-bold text-gray-900">Mis Grupos</h3>
-            <a href="{{ route('grupos.index') }}" class="text-sm text-teal-600 hover:text-teal-700 font-medium hover:underline">
+            <a href="{{ route('groups.index') }}" class="text-sm text-teal-600 hover:text-teal-700 font-medium hover:underline">
                 Gestionar Grupos
             </a>
         </div>
@@ -82,7 +82,7 @@
                 </svg>
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">No tienes grupos aún</h3>
                 <p class="text-sm text-gray-500 mb-4">Crea tu primer grupo para empezar a gestionar usuarios</p>
-                <a href="{{ route('grupos.index') }}" class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-medium px-4 py-2 rounded-lg transition-colors">
+                <a href="{{ route('groups.index') }}" class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-medium px-4 py-2 rounded-lg transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M5 12h14"/><path d="M12 5v14"/>
                     </svg>
@@ -108,7 +108,7 @@
                                 </svg>
                                 {{ $group->users_count }} miembros
                             </span>
-                            <a href="{{ route('grupos.index') }}" class="text-teal-600 hover:text-teal-700 font-medium text-xs hover:underline">
+                            <a href="{{ route('groups.index') }}" class="text-teal-600 hover:text-teal-700 font-medium text-xs hover:underline">
                                 Ver detalles →
                             </a>
                         </div>
