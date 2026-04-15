@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Auth\AcceptInvitation;
-use App\Http\Controllers\Auth\CustomLoginController;
 use App\Http\Controllers\PdfController;
 
 Route::get('/', function () {
@@ -23,13 +22,6 @@ Route::middleware([
         return view('dashboard');
     })->name('dashboard');
 
-    // ========================================
-    // PERFIL - Todos los roles autenticados
-    // ========================================
-
-    Route::get('/profile', function () {
-        return view('profile.show');
-    })->name('profile.show');
 
     // ========================================
     // RUTAS SOLO PARA ADMIN (role_id = 1)
@@ -38,7 +30,7 @@ Route::middleware([
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
         
         // Gestión de Usuarios
-        Route::get('/usuarios', function () {
+        Route::get('/users', function () {
             return view('admin.users');
         })->name('users');
 
@@ -52,16 +44,6 @@ Route::middleware([
             return view('admin.tests');
         })->name('tests');
 
-        // Reportes Generales (TODO)
-        // Route::get('/reportes', function () {
-        //     return view('admin.reports');
-        // })->name('reportes');
-
-        // Configuración (TODO)
-        // Route::get('/configuracion', function () {
-        //     return view('admin.settings');
-        // })->name('configuracion');
-
         // PDFs de Admin
         Route::get('/pdf/dashboard', [PdfController::class, 'downloadAdminDashboard'])
             ->name('pdf.dashboard');
@@ -74,31 +56,26 @@ Route::middleware([
     // RUTAS SOLO PARA ORIENTADOR (role_id = 2)
     // ========================================
 
-    Route::middleware(['role:advisor'])->prefix('orientador')->name('orientador.')->group(function () {
+    Route::middleware(['role:advisor'])->prefix('advisor')->name('advisor.')->group(function () {
         
         // Mis Usuarios
-        Route::get('/usuarios', function () {
+        Route::get('/users', function () {
             return view('orientador.users');
         })->name('users');
 
         // Estadísticas
-        Route::get('/estadisticas', function () {
+        Route::get('/statistics', function () {
             return view('orientador.statistics');
-        })->name('estadisticas');
-
-        // Resultados (TODO)
-        // Route::get('/resultados', function () {
-        //     return view('orientador.results');
-        // })->name('resultados');
+        })->name('statistics');
 
         // PDFs de Orientador
-        Route::get('/pdf/estadisticas', [PdfController::class, 'downloadAdvisorStatistics'])
+        Route::get('/pdf/statistics', [PdfController::class, 'downloadAdvisorStatistics'])
             ->name('pdf.statistics');
         
-        Route::get('/pdf/grupo/{groupId}', [PdfController::class, 'downloadGroupReport'])
+        Route::get('/pdf/group/{groupId}', [PdfController::class, 'downloadGroupReport'])
             ->name('pdf.group');
         
-        Route::get('/pdf/usuario/{userId}', [PdfController::class, 'downloadUserHistory'])
+        Route::get('/pdf/user/{userId}', [PdfController::class, 'downloadUserHistory'])
             ->name('pdf.user-history');
     });
 
@@ -109,17 +86,17 @@ Route::middleware([
     Route::middleware(['role:user'])->group(function () {
         
         // Responder Tests
-        Route::get('/tests/responder/{assignmentId}', function ($assignmentId) {
+        Route::get('/tests/take/{assignmentId}', function ($assignmentId) {
             return view('tests.take', ['assignmentId' => $assignmentId]);
         })->name('tests.take');
 
         // Mis Resultados
-        Route::get('/mis-resultados', function () {
+        Route::get('/my-results', function () {
             return view('results.index');
         })->name('results.index');
 
         // Ver Resultado Específico
-        Route::get('/resultados/{responseId}', function ($responseId) {
+        Route::get('/results/{responseId}', function ($responseId) {
             return view('results.show', ['responseId' => $responseId]);
         })->name('results.show');
     });
@@ -145,22 +122,22 @@ Route::middleware([
     Route::middleware(['role:admin,advisor'])->group(function () {
 
         // Gestión de Grupos
-        Route::get('/grupos', function () {
+        Route::get('/groups', function () {
             return view('grupos.index');
-        })->name('grupos.index');
+        })->name('groups.index');
 
         // Asignar Tests
-        Route::get('/tests/asignar', function () {
+        Route::get('/tests/assign', function () {
             return view('tests.assignments');
         })->name('tests.assignments');
 
         // Resultados
-        Route::get('/resultados', function () {
+        Route::get('/results', function () {
             return view('advisor.results');
         })->name('advisor.results');
 
         // Ver Resultado Específico
-        Route::get('/resultados/{responseId}/ver', function ($responseId) {
+        Route::get('/results/{responseId}/show', function ($responseId) {
             return view('advisor.results-show', ['responseId' => $responseId]);
         })->name('advisor.results.show');
     });
@@ -174,7 +151,3 @@ Route::middleware([
 Route::get('/invitation/accept/{token}', AcceptInvitation::class)
     ->name('invitation.accept')
     ->middleware('signed');
-
-// Login y Logout personalizados
-Route::post('/login', [CustomLoginController::class, 'login'])->name('login');
-Route::post('/logout', [CustomLoginController::class, 'logout'])->name('logout');
