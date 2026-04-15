@@ -1,0 +1,8 @@
+# pack-refs with: peeled fully-peeled sorted 
+f9aae91a3dd08efd6b7caa98d831cf9f526828a5 refs/heads/main
+e9f7c11196ca085b2d36cf6bde917c73bb3204d6 refs/heads/panel-admin
+49f86f5839f0d937406b3e0071251d3a33b17930 refs/heads/panel-orientador
+6d7781f23005cf349401a3e4d90309b021825d84 refs/heads/panel-users
+f9aae91a3dd08efd6b7caa98d831cf9f526828a5 refs/heads/pdf
+2364d956f0cb4602ff463d625c7c2b1d0c663d5f refs/heads/pwa-implementation
+da020d33ced40cf56f2fbb7166b2632f7f5308d6 refs/heads/tests
